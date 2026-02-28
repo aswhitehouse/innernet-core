@@ -8,8 +8,36 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
+}
+
+/* ---- Tile micro-previews: subtle breathing ---- */
+@keyframes tile-preview {
+  0%, 100% { opacity: 0.92; }
+  50% { opacity: 1; }
+}
+
+/* ---- Selected tile: very slow glow (breathing) ---- */
+@keyframes tile-glow {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.45; }
+}
+
+/* ---- News tile: temperature pulse ---- */
+@keyframes temperature-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+/* ---- Background gradient: slow shift over 60–90s ---- */
+@keyframes gradient-breathe {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+.animate-gradient-breathe {
+  animation: gradient-breathe var(--gradient-shift-duration, 75s) ease-in-out infinite;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +50,185 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Theme wrapper: gradient lives on fixed pseudo/fixed divs from ThemeContext */
+.theme-wrapper {
+  background: transparent;
+}
+
+/* Gentle hover on tiles: slow, not reactive */
+.tile-hover-gentle {
+  transition: transform 1.2s ease-out, opacity 0.8s ease-out, box-shadow 1s ease-out;
+}
+.tile-hover-gentle:hover {
+  transform: scale(1.005);
+  opacity: 0.95;
+}
+
+/* Watch rails: subtle horizontal scrollbar */
+.overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
+}
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ---- Window weather: clouds (drift) - puffy cumulus style ---- */
+.cloud {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  border-radius: 50%;
+  /* Puffs built from box-shadow; no fill so we only see the shadows */
+  background: transparent;
+  animation: cloud-drift linear infinite;
+}
+/* Cloud 1: large puffy */
+.cloud-1 {
+  top: 10%; left: -15%;
+  box-shadow:
+    0 0 0 25px rgba(255,255,255,0.92),
+    35px -8px 0 -8px rgba(255,255,255,0.9),
+    70px 4px 0 -5px rgba(255,255,255,0.88),
+    100px -4px 0 -12px rgba(255,255,255,0.85),
+    130px 0 0 -6px rgba(255,255,255,0.9);
+  filter: blur(3px);
+  animation-duration: 95s;
+  animation-delay: 0s;
+}
+/* Cloud 2: smaller, higher */
+.cloud-2 {
+  top: 22%; left: -8%;
+  box-shadow:
+    0 0 0 18px rgba(255,255,255,0.9),
+    28px 6px 0 -6px rgba(255,255,255,0.88),
+    55px -4px 0 -8px rgba(255,255,255,0.85),
+    78px 2px 0 -4px rgba(255,255,255,0.9);
+  filter: blur(2px);
+  animation-duration: 110s;
+  animation-delay: -25s;
+}
+/* Cloud 3: wide and flat */
+.cloud-3 {
+  top: 16%; left: 15%;
+  box-shadow:
+    0 0 0 22px rgba(255,255,255,0.88),
+    30px 8px 0 -10px rgba(255,255,255,0.86),
+    65px 2px 0 -6px rgba(255,255,255,0.9),
+    95px -2px 0 -8px rgba(255,255,255,0.85),
+    125px 6px 0 -5px rgba(255,255,255,0.88);
+  filter: blur(4px);
+  animation-duration: 88s;
+  animation-delay: -40s;
+}
+/* Cloud 4: small cluster */
+.cloud-4 {
+  top: 42%; left: -12%;
+  box-shadow:
+    0 0 0 14px rgba(255,255,255,0.9),
+    22px -4px 0 -5px rgba(255,255,255,0.86),
+    42px 4px 0 -7px rgba(255,255,255,0.88);
+  filter: blur(2px);
+  animation-duration: 102s;
+  animation-delay: -60s;
+}
+/* Cloud 5: medium, right side */
+.cloud-5 {
+  top: 32%; left: 55%;
+  box-shadow:
+    0 0 0 20px rgba(255,255,255,0.88),
+    32px -6px 0 -8px rgba(255,255,255,0.86),
+    62px 2px 0 -6px rgba(255,255,255,0.9),
+    90px -2px 0 -10px rgba(255,255,255,0.84);
+  filter: blur(3px);
+  animation-duration: 92s;
+  animation-delay: -30s;
+}
+
+/* When Watch is active: clouds sit back, blurred */
+.cloud-layer-blurred {
+  opacity: 0.55;
+  filter: blur(18px);
+}
+
+@keyframes cloud-drift {
+  0%   { transform: translateX(0) translateY(0); }
+  100% { transform: translateX(calc(100vw + 240px)) translateY(3px); }
+}
+
+/* ---- Window weather: rain (fall) ---- */
+.rain-container {
+  position: absolute;
+  inset: 0;
+}
+.rain-streak {
+  position: absolute;
+  top: -10%;
+  width: 1px;
+  height: 80px;
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,0.28) 40%, rgba(255,255,255,0.12) 100%);
+  transform: translateX(0) rotate(-12deg);
+  animation: rain-fall linear infinite;
+}
+
+@keyframes rain-fall {
+  0%   { transform: translateY(0) translateX(0) rotate(-12deg); }
+  100% { transform: translateY(100vh) translateX(20px) rotate(-12deg); }
+}
+
+/* When Watch is active: rain sits back, blurred */
+.rain-layer-blurred {
+  opacity: 0.45;
+  filter: blur(14px);
+}
+
+/* ---- Watch Mirror: zone entrance ---- */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.7s ease-out forwards;
+}
+
+/* ---- Watch Mirror: interpreting state (silent cognition) ---- */
+@keyframes intent-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.intent-shimmer-overlay {
+  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.04) 45%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 55%, transparent 100%);
+  background-size: 200% 100%;
+  animation: intent-shimmer 1.2s ease-in-out;
+}
+
+.intent-interpreting {
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 0 24px rgba(255,255,255,0.06);
+  animation: intent-glow-pulse 0.4s ease-in-out;
+}
+
+@keyframes intent-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 0 16px rgba(255,255,255,0.04); }
+  50%      { box-shadow: 0 0 0 1px rgba(255,255,255,0.12), 0 0 28px rgba(255,255,255,0.08); }
+}
+
+/* ---- Watch Mirror: gradient crossfade when zone morphs ---- */
+@keyframes gradient-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.animate-gradient-fade-out {
+  animation: gradient-fade-out 0.6s ease-out forwards;
 }

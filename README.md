@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# My Innernet
 
-## Getting Started
+A personal **digital habitat** — a calm, adaptive homepage that serves as the entry point to your online experience. Not a dashboard, not a feed reader, not a chatbot. A single-page space that adapts to time of day and a mock “weather” mood.
 
-First, run the development server:
+## What this is (V1 + V2 Watch)
+
+- **Single-page app**: One view, no routes. Tracks open in-place in the central “Cognitive Canvas.”
+- **Four tracks**: Research, News, **Watch (Gen UX)**, Reflect. Watch is the primary focus; others are placeholders.
+- **Theme engine**: Time of day + mock weather; state is React + `localStorage`.
+- **V2 Watch**: Intent-led video experience. Choose mode (Learn, Deep Dive, Stay Informed, Be Inspired, Wind Down, Light Browse). Layout morphs per intent. Videos show Emotional Intensity, Signal Score, Drift Risk. High-intensity clicks open a transparency prompt. Session trend after 2–3 clicks.
+
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy to Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Push the repo to GitHub (or connect your existing repo in Vercel).
+2. In [Vercel](https://vercel.com): **Add New Project** → import the repo.
+3. Leave build settings as default (Next.js is auto-detected):
+   - **Build Command**: `next build`
+   - **Output Directory**: (default)
+   - **Install Command**: `npm install`
+4. Deploy. The app is client-side and static-friendly; no env vars required.
 
-## Learn More
+Or from the CLI:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm i -g vercel
+vercel
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Follow the prompts and deploy.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project structure
 
-## Deploy on Vercel
+```
+src/
+├── app/
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   ├── CentralPane.tsx       # Watch → WatchExperience
+│   ├── Tile.tsx
+│   ├── WeatherToggle.tsx
+│   ├── tracks/
+│   │   ├── ResearchTrack.tsx, NewsTrack.tsx, ReflectTrack.tsx, TilePreviews.tsx
+│   └── watch/               # Gen UX Watch (V2)
+│       ├── WatchExperience.tsx
+│       ├── IntentSelector.tsx
+│       ├── VideoCard.tsx
+│       ├── ModeLayoutRenderer.tsx
+│       └── DriftConfirmDialog.tsx
+├── contexts/ThemeContext.tsx
+├── data/mockVideos.ts
+└── lib/
+    ├── theme.ts
+    ├── watchTypes.ts
+    └── watchSession.ts
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Personalising your name
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The welcome line is: **“Welcome, &lt;Name&gt;. Where should we go today?”**
+
+To set your name for the session (no UI in V1), in the browser console:
+
+```js
+localStorage.setItem('innernet-name', 'Your Name');
+location.reload();
+```
+
+## Tech stack
+
+- **Next.js** (App Router), **TypeScript**, **Tailwind CSS**
+- **Client-only** for V1; no server actions or API routes required for this prototype.
+
+---
+
+V1 is an experiential prototype: the goal is whether it *feels* like a digital home and whether time-of-day and weather toggles feel grounding. Iterate from here.
