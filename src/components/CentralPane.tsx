@@ -48,7 +48,7 @@ export function CentralPane({ activeTrack, onCloseTrack, watchHasBeenOpened = fa
                 }
           }
         >
-          <SovereignWatchPortal onZoomOut={onCloseTrack} />
+          <SovereignWatchPortal onCollapse={onCloseTrack} />
         </div>
       )}
 

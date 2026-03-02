@@ -1,40 +1,259 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import {
+  buildEmbedUrl,
+  sendCommand,
+  sendListening,
+  parseYouTubeMessage,
+  YT_STATE,
+} from "@/lib/youtubePlayer";
+
+const BLACK_MS = 200;
+const FADE_UP_MS = 350;
+const PROGRESS_POLL_MS = 250;
+
 interface PortalPlayerProps {
   youtubeId: string;
   title: string;
+  thumbnailUrl?: string;
   onExit: () => void;
 }
 
 /**
- * Embedded YouTube player inside Innernet frame.
- * No autoplay of next; no YouTube chrome beyond the player.
- * Visually contained within the portal.
+ * Sovereign portal player: custom play surface → fade to black → YT iframe (minimal chrome) → custom controls.
+ * Uses plain iframe + postMessage only (no YouTube IFrame API script) to avoid localhost postMessage errors.
  */
-export function PortalPlayer({ youtubeId, title, onExit }: PortalPlayerProps) {
-  const embedUrl = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&modestbranding=1&rel=0`;
+export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalPlayerProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Start at fade-to-black so the hero click is the single intentional gesture.
+  const [viewPhase, setViewPhase] = useState<"toBlack" | "loading" | "playing">("toBlack");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(80);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isPlayingRef = useRef(false);
+  const durationRef = useRef(0);
+  isPlayingRef.current = isPlaying;
+  durationRef.current = duration;
+
+  useEffect(() => {
+    if (viewPhase !== "toBlack") return;
+    const t = setTimeout(() => setViewPhase("loading"), BLACK_MS);
+    return () => clearTimeout(t);
+  }, [viewPhase]);
+
+  // When iframe loads, signal listening and immediately attempt muted autoplay.
+  // Starting muted satisfies most autoplay policies; we then unmute shortly after.
+  const onIframeLoad = useCallback(() => {
+    const iframe = iframeRef.current;
+    sendListening(iframe);
+    // Start muted, play, then gently unmute.
+    sendCommand(iframe, "mute");
+    sendCommand(iframe, "playVideo");
+    setIsPlaying(true);
+    setViewPhase("playing");
+    window.setTimeout(() => {
+      sendCommand(iframeRef.current, "unMute");
+    }, 200);
+  }, []);
+
+  // Listen for messages from YouTube embed (no widget script = no postMessage origin errors)
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      const info = parseYouTubeMessage(event);
+      if (!info) return;
+      if (typeof info.currentTime === "number") setCurrentTime(info.currentTime);
+      if (typeof info.duration === "number" && info.duration > 0) setDuration(info.duration);
+      if (typeof info.playerState === "number") {
+        setIsPlaying(info.playerState === YT_STATE.PLAYING);
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, []);
+
+  // Poll progress while playing (embed may not send frequent infoDelivery; we advance locally)
+  useEffect(() => {
+    if (viewPhase !== "playing") return;
+    progressIntervalRef.current = setInterval(() => {
+      setCurrentTime((t) => {
+        if (isPlayingRef.current && durationRef.current > 0 && t < durationRef.current - 0.5) {
+          return t + PROGRESS_POLL_MS / 1000;
+        }
+        return t;
+      });
+    }, PROGRESS_POLL_MS);
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+    };
+  }, [viewPhase]);
+
+  const togglePlay = useCallback(() => {
+    if (isPlaying) {
+      sendCommand(iframeRef.current, "pauseVideo");
+      setIsPlaying(false);
+    } else {
+      sendCommand(iframeRef.current, "playVideo");
+      setIsPlaying(true);
+    }
+  }, [isPlaying]);
+
+  const seek = useCallback(
+    (frac: number) => {
+      if (!Number.isFinite(duration) || duration <= 0) return;
+      const sec = frac * duration;
+      sendCommand(iframeRef.current, "seekTo", [sec, true]);
+      setCurrentTime(sec);
+    },
+    [duration]
+  );
+
+  const setVolumeLevel = useCallback((v: number) => {
+    setVolume(v);
+    sendCommand(iframeRef.current, "setVolume", [Math.round(v)]);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    const cont = containerRef.current;
+    if (!cont) return;
+    if (!document.fullscreenElement) {
+      cont.requestFullscreen?.();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen?.();
+      setIsFullscreen(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
+
+  const progressFrac = duration > 0 ? Math.min(1, currentTime / duration) : 0;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-black shadow-2xl">
-      <div className="aspect-video w-full">
-        <iframe
-          src={embedUrl}
-          title={title}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          className="h-full w-full"
-        />
-      </div>
-      <div className="absolute right-3 top-3">
+    <div
+      ref={containerRef}
+      className="relative overflow-hidden rounded-2xl bg-black shadow-2xl"
+      style={{ color: "var(--theme-text-tone)" }}
+    >
+      {viewPhase === "toBlack" && (
+        <div className="absolute inset-0 rounded-2xl bg-black aspect-video w-full" />
+      )}
+
+      {(viewPhase === "loading" || viewPhase === "playing") && (
+        <div className="relative aspect-video w-full bg-black">
+          <iframe
+            ref={iframeRef}
+            src={buildEmbedUrl(youtubeId, true)}
+            title={title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 h-full w-full rounded-2xl"
+            style={{
+              opacity: viewPhase === "playing" ? 1 : 0,
+              transition: `opacity ${FADE_UP_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+            }}
+            onLoad={onIframeLoad}
+          />
+          {viewPhase === "loading" && (
+            <div
+              className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/90 player-loading-shimmer"
+              aria-hidden
+            />
+          )}
+        </div>
+      )}
+
+      <div className="absolute right-3 top-3 z-20">
         <button
           type="button"
           onClick={onExit}
           className="rounded-xl border border-white/20 bg-black/60 px-4 py-2 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/10"
-          style={{ color: "var(--theme-text-tone)" }}
         >
-          Exit
+          Zoom Out
         </button>
       </div>
+
+      {viewPhase === "playing" && (
+        <div
+          className="absolute bottom-0 left-0 right-0 z-10 flex flex-col gap-2 rounded-b-2xl p-3"
+          style={{
+            background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.4) 60%, transparent)",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={togglePlay}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25"
+              aria-label={isPlaying ? "Pause" : "Play"}
+            >
+              {isPlaying ? (
+                <span className="text-base font-medium leading-none text-white/95">‖</span>
+              ) : (
+                <span
+                  className="inline-block h-0 w-0 border-y-[7px] border-l-[12px] border-y-transparent border-l-white/95"
+                  style={{ marginLeft: "3px" }}
+                />
+              )}
+            </button>
+            <div className="min-w-0 flex-1">
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.001}
+                value={progressFrac}
+                onChange={(e) => seek(parseFloat(e.target.value))}
+                className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/25 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+              />
+            </div>
+            <span className="shrink-0 text-xs opacity-80">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={volume}
+                onChange={(e) => setVolumeLevel(parseInt(e.target.value, 10))}
+                className="h-1 w-20 cursor-pointer appearance-none rounded-full bg-white/25 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                aria-label="Volume"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/20"
+              aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            >
+              {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+function formatTime(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }

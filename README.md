@@ -18,6 +18,23 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+### YouTube search (Watch portal)
+
+The Watch portal uses the YouTube Data API v3 for real search. To enable it locally:
+
+1. Copy the example env file:
+   ```bash
+   cp .env.example .env.local
+   ```
+2. Get an API key from [Google Cloud Console](https://console.cloud.google.com/apis/credentials) (enable **YouTube Data API v3** for your project).
+3. Put the key in `.env.local`:
+   ```
+   YOUTUBE_API_KEY=your_actual_key_here
+   ```
+4. Restart the dev server (`npm run dev`).
+
+`.env.local` is gitignored; your key stays on your machine. On Vercel, add `YOUTUBE_API_KEY` in the project’s Environment Variables.
+
 ## Deploy to Vercel
 
 1. Push the repo to GitHub (or connect your existing repo in Vercel).

@@ -232,3 +232,190 @@ body {
 .animate-gradient-fade-out {
   animation: gradient-fade-out 0.6s ease-out forwards;
 }
+
+/* ---- Generative Journey: soft fades ---- */
+@keyframes journey-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.journey-fade-in {
+  animation: journey-fade-in 0.5s ease-out forwards;
+}
+
+.journey-stagger-0 { animation-delay: 0ms; }
+.journey-stagger-1 { animation-delay: 80ms; }
+.journey-stagger-2 { animation-delay: 160ms; }
+
+/* ---- Directional Interlude: overlay declaration ---- */
+@keyframes interlude-enter {
+  from { opacity: 0; transform: scale(0.98); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes interlude-exit {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(1); }
+}
+.interlude-enter {
+  animation: interlude-enter 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.interlude-exit {
+  animation: interlude-exit 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.interlude-primary {
+  font-size: clamp(1.25rem, 2.5vw + 0.75rem, 1.75rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-align: center;
+  line-height: 1.2;
+}
+.interlude-secondary {
+  font-size: 0.875rem;
+  font-weight: 400;
+  opacity: 0.7;
+  line-height: 1.5;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+/* ---- Flow Layer V1: interpretive pause (forming) ---- */
+.watch-flow-ease {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flow-form-hero-wrap {
+  opacity: 0.93;
+  filter: blur(3px);
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.flow-form-hero-wrap.flow-hero-revealed {
+  opacity: 1;
+  filter: none;
+}
+
+.flow-reflection-in {
+  opacity: 0;
+  animation: journey-fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.flow-hero-in {
+  opacity: 0;
+  animation: journey-fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.flow-branch-in {
+  opacity: 0;
+  animation: journey-fade-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ---- Flow Layer: morph (branch click) ---- */
+.morph-hero-exit {
+  transform: scale(0.98);
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.morph-cards-exit {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.morph-reflection-to-breadcrumb {
+  transform: translateY(-6px);
+  font-size: 0.8125rem;
+  opacity: 0.6;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    font-size 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.morph-hero-enter {
+  opacity: 0;
+  animation: journey-fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.morph-cards-enter {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: morph-cards-rise 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes morph-cards-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Breadcrumb reflection: emotional memory, not nav */
+.flow-breadcrumb-line {
+  font-size: 0.8125rem;
+  opacity: 0.6;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- Branch card: hover momentum ---- */
+.branch-card-lift {
+  transition: transform 0.25s ease-in-out,
+    box-shadow 0.25s ease-in-out,
+    filter 0.25s ease-in-out;
+}
+.branch-card-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  filter: brightness(1.04);
+}
+.branch-card-lift:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+  transition-duration: 0.15s;
+}
+.branch-card-lift .branch-card-thumb {
+  transition: filter 0.25s ease-in-out;
+}
+.branch-card-lift:hover .branch-card-thumb {
+  filter: brightness(1.06);
+}
+
+/* ---- Portal player: custom play surface + loading ---- */
+@keyframes player-loading-shimmer {
+  0%   { background-position: 150% 0; }
+  100% { background-position: -50% 0; }
+}
+.player-loading-shimmer {
+  background: linear-gradient(
+    95deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.03) 40%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.03) 60%,
+    rgba(255,255,255,0) 100%
+  );
+  background-size: 200% 100%;
+  animation: player-loading-shimmer 1.8s ease-in-out infinite;
+}
+.player-poster-play {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.player-poster-play:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(1.04);
+}
+.player-poster-play::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: 2px;
+  border: 8px solid transparent;
+  border-left-color: rgba(255, 255, 255, 0.95);
+  border-width: 10px 0 10px 16px;
+  transform: translate(-50%, -50%);
+}

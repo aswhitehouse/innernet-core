@@ -1,7 +1,6 @@
 /**
- * Watch mode theme: cinematic tone when Watch is active.
- * Isolated from weather — consistent dark gradient. No clouds/rain in canvas.
- * Weather can still influence header accent glow / mode badge tint via CSS vars from parent.
+ * Sovereign Watch: static visual system. No dynamic theme/weather.
+ * Deep navy → charcoal gradient. Subtle, consistent accent.
  */
 
 export interface WatchTheme {
@@ -12,14 +11,17 @@ export interface WatchTheme {
   motionScale: number;
 }
 
+/** Static cinematic gradient: deep navy → charcoal. No transitions. */
+export const SOVEREIGN_GRADIENT =
+  "linear-gradient(180deg, #0f1419 0%, #1a1f26 30%, #252b33 60%, #2d3439 100%)";
+
 export function getWatchModeTheme(): WatchTheme {
   return {
-    gradient:
-      "linear-gradient(165deg, #16151c 0%, #1c1b24 35%, #222028 100%)",
-    accent: "#8b7cb8",
-    accentMuted: "#a89ac9",
-    textTone: "#e8e6ed",
-    motionScale: 1.08,
+    gradient: SOVEREIGN_GRADIENT,
+    accent: "#6b7c9e",
+    accentMuted: "#8a9ab5",
+    textTone: "#e8eaed",
+    motionScale: 1,
   };
 }
 

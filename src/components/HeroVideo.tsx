@@ -1,13 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import type { MockVideo } from "@/lib/watchTypes";
 
-const THUMB = (id: string) =>
+export interface PortalVideoShape {
+  id: string;
+  youtubeId: string;
+  title: string;
+  duration?: string;
+  thumbnailUrl?: string;
+}
+
+const defaultThumb = (id: string) =>
   `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
 
 interface HeroVideoProps {
-  video: MockVideo;
+  video: PortalVideoShape;
   /** Optional: shows "Zone: {zoneLabel}" when provided (Sovereign Portal) */
   zoneLabel?: string;
   /** Optional: when provided, card is clickable and triggers onPlay */
@@ -15,6 +22,8 @@ interface HeroVideoProps {
 }
 
 export function HeroVideo({ video, zoneLabel, onPlay }: HeroVideoProps) {
+  const thumb = video.thumbnailUrl ?? defaultThumb(video.youtubeId);
+  const duration = video.duration ?? "—";
   const isClickable = Boolean(onPlay);
 
   return (
@@ -31,7 +40,7 @@ export function HeroVideo({ video, zoneLabel, onPlay }: HeroVideoProps) {
         tabIndex={isClickable ? 0 : undefined}
       >
         <Image
-          src={THUMB(video.youtubeId)}
+          src={thumb}
           alt=""
           fill
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
@@ -66,10 +75,10 @@ export function HeroVideo({ video, zoneLabel, onPlay }: HeroVideoProps) {
           <h2 className={`line-clamp-1 text-xl font-semibold drop-shadow-lg sm:text-2xl ${zoneLabel ? "mt-1" : ""}`}>
             {video.title}
           </h2>
-          <p className="mt-1 text-xs opacity-90">{video.duration}</p>
+          <p className="mt-1 text-xs opacity-90">{duration}</p>
         </div>
         <div className="absolute bottom-4 right-4 rounded bg-black/70 px-2.5 py-1 text-xs font-medium text-white/95">
-          {video.duration}
+          {duration}
         </div>
       </div>
     </div>
