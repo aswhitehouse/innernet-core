@@ -100,9 +100,9 @@ function HomeContent({
         </p>
       </header>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col gap-8 lg:flex-row lg:gap-6">
         {/* Left: suggested sources — title aligned with top of central pane */}
-        <aside className="w-40 shrink-0 space-y-3">
+        <aside className="w-full space-y-3 lg:w-40 lg:shrink-0">
           <div>
             <h2
               className="text-xs font-medium uppercase tracking-[0.18em] opacity-70"
