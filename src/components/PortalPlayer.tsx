@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import {
   buildEmbedUrl,
   sendCommand,
@@ -36,6 +35,7 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(80);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [videoEnded, setVideoEnded] = useState(false);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isPlayingRef = useRef(false);
   const durationRef = useRef(0);
@@ -71,7 +71,9 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
       if (typeof info.currentTime === "number") setCurrentTime(info.currentTime);
       if (typeof info.duration === "number" && info.duration > 0) setDuration(info.duration);
       if (typeof info.playerState === "number") {
-        setIsPlaying(info.playerState === YT_STATE.PLAYING);
+        const playing = info.playerState === YT_STATE.PLAYING;
+        setIsPlaying(playing);
+        if (info.playerState === YT_STATE.ENDED) setVideoEnded(true);
       }
     };
     window.addEventListener("message", handler);
@@ -134,6 +136,14 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
     }
   }, []);
 
+  const handleReplay = useCallback(() => {
+    sendCommand(iframeRef.current, "seekTo", [0, true]);
+    sendCommand(iframeRef.current, "playVideo");
+    setVideoEnded(false);
+    setIsPlaying(true);
+    setCurrentTime(0);
+  }, []);
+
   useEffect(() => {
     const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onFullscreenChange);
@@ -185,6 +195,37 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
           Zoom Out
         </button>
       </div>
+
+      {/* When video ends, cover YouTube end screen with our own "what next?" prompt */}
+      {videoEnded && (
+        <div
+          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 rounded-2xl px-6 py-8"
+          style={{
+            background: "rgba(0,0,0,0.82)",
+            color: "var(--theme-text-tone)",
+          }}
+        >
+          <p className="text-center text-sm font-light opacity-90">
+            What would you like to do next?
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <button
+              type="button"
+              onClick={handleReplay}
+              className="rounded-xl border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-white/15"
+            >
+              Replay
+            </button>
+            <button
+              type="button"
+              onClick={onExit}
+              className="rounded-xl border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-white/15"
+            >
+              Zoom out — choose another direction
+            </button>
+          </div>
+        </div>
+      )}
 
       {viewPhase === "playing" && (
         <div

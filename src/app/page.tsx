@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { IntroThreshold, type IntroMode } from "@/components/IntroThreshold";
 import { Tile, type TrackId } from "@/components/Tile";
 import { CentralPane } from "@/components/CentralPane";
 import {
@@ -11,8 +12,16 @@ import {
   ReflectPreview,
 } from "@/components/tracks/TilePreviews";
 
+const MODE_KEY = "innernet-mode";
+
+function getStoredMode(): IntroMode | null {
+  if (typeof window === "undefined") return null;
+  const v = localStorage.getItem(MODE_KEY);
+  return v === "explore" || v === "drift" ? v : null;
+}
+
 const TRACKS: { id: TrackId; label: string; icon: string; accentHint?: string }[] = [
-  { id: "watch", label: "Watch · YouTube", icon: "🎥", accentHint: "#6e5c6b" },
+  { id: "watch", label: "Explore Videos", icon: "🎥", accentHint: "#6e5c6b" },
   { id: "news", label: "News", icon: "🌍", accentHint: "#6b6e5c" },
   { id: "research", label: "Research", icon: "🔬", accentHint: "#5c6b6e" },
   { id: "reflect", label: "Reflect", icon: "🌿", accentHint: "#5e6b5c" },
@@ -27,7 +36,7 @@ const PREVIEWS: Record<TrackId, React.ReactNode> = {
 
 // Left-side suggestions: which sources the user can add as tiles.
 const SUGGESTION_TRACKS: { id: TrackId; label: string; icon: string }[] = [
-  { id: "watch", label: "YouTube", icon: "🎥" },
+  { id: "watch", label: "Explore Videos", icon: "🎥" },
   { id: "news", label: "News", icon: "🌍" },
   { id: "research", label: "Research", icon: "🔬" },
   { id: "reflect", label: "Reflect", icon: "🌿" },
@@ -78,9 +87,7 @@ function HomeContent({
         }`}
       >
         <h1
-          className={`font-medium tracking-tight transition-all duration-500 ${
-            activeTrack === "watch" ? "text-xl sm:text-2xl" : "text-2xl sm:text-3xl"
-          }`}
+          className="font-display font-medium tracking-tight text-3xl sm:text-4xl"
           style={{ color: "var(--theme-text-tone)" }}
         >
           Welcome, {name}. Where should we go today?
@@ -89,7 +96,7 @@ function HomeContent({
           className="mt-1 text-sm opacity-70"
           style={{ color: "var(--theme-text-tone)" }}
         >
-          My Innernet — your digital habitat
+          My Innernet | your digital habitat
         </p>
       </header>
 
@@ -185,7 +192,21 @@ function HomeContent({
   );
 }
 
+function DriftPlaceholder() {
+  return (
+    <div
+      className="flex min-h-screen flex-col items-center justify-center px-6"
+      style={{ color: "var(--theme-text-tone)" }}
+    >
+      <p className="font-display text-2xl font-medium tracking-tight opacity-90">Drift</p>
+      <p className="mt-2 text-sm font-light opacity-70">Wander. Let it unfold.</p>
+    </div>
+  );
+}
+
 export default function Home() {
+  const [mode, setMode] = useState<IntroMode | null>(null);
+  const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
   const [activeTrack, setActiveTrack] = useState<TrackId | null>(null);
   const [name, setName] = useState("there");
   const [watchHasBeenOpened, setWatchHasBeenOpened] = useState(false);
@@ -193,26 +214,45 @@ export default function Home() {
 
   useEffect(() => {
     setName(getStoredName());
+    setMode(getStoredMode());
+    setHasCheckedStorage(true);
   }, []);
 
   useEffect(() => {
     if (activeTrack === "watch") setWatchHasBeenOpened(true);
   }, [activeTrack]);
 
+  const handleIntroSelect = useCallback((m: IntroMode) => {
+    if (typeof window !== "undefined") localStorage.setItem(MODE_KEY, m);
+    setMode(m);
+  }, []);
+
   return (
     <ThemeProvider watchActive={activeTrack === "watch"}>
-      <HomeContent
-        activeTrack={activeTrack}
-        onTrackChange={setActiveTrack}
-        name={name}
-        watchHasBeenOpened={watchHasBeenOpened}
-        enabledTracks={enabledTracks}
-        onEnableTrack={(id) =>
-          setEnabledTracks((prev) =>
-            prev.includes(id) ? prev : [...prev, id]
-          )
-        }
-      />
+      {!hasCheckedStorage ? (
+        <div className="min-h-screen w-full" aria-hidden />
+      ) : mode === null ? (
+        <IntroThreshold onSelect={handleIntroSelect} />
+      ) : mode === "explore" ? (
+        <div className="intro-main-fade-in">
+          <HomeContent
+            activeTrack={activeTrack}
+            onTrackChange={setActiveTrack}
+            name={name}
+            watchHasBeenOpened={watchHasBeenOpened}
+            enabledTracks={enabledTracks}
+            onEnableTrack={(id) =>
+              setEnabledTracks((prev) =>
+                prev.includes(id) ? prev : [...prev, id]
+              )
+            }
+          />
+        </div>
+      ) : (
+        <div className="intro-main-fade-in">
+          <DriftPlaceholder />
+        </div>
+      )}
     </ThemeProvider>
   );
 }

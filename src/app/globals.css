@@ -10,6 +10,7 @@
   --color-foreground: var(--foreground);
   --font-sans: ui-sans-serif, system-ui, sans-serif, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
+  --font-display: var(--font-display, "Playfair Display", ui-serif, Georgia, serif);
 }
 
 /* ---- Tile micro-previews: subtle breathing ---- */
@@ -40,6 +41,27 @@
   animation: gradient-breathe var(--gradient-shift-duration, 75s) ease-in-out infinite;
 }
 
+/* ---- Background clouds: static image with slow morph ---- */
+@keyframes clouds-morph {
+  0%, 100% {
+    background-position: 50% 50%;
+    opacity: 0.9;
+  }
+  50% {
+    background-position: 52% 48%;
+    opacity: 1;
+  }
+}
+
+.bg-clouds-morph {
+  background-image: url("/clouds.png");
+  background-size: cover;
+  background-position: 50% 50%;
+  filter: blur(16px) saturate(0.92) brightness(0.92);
+  transform: scale(1.1);
+  animation: clouds-morph 75s ease-in-out infinite;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -51,6 +73,10 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), "Playfair Display", ui-serif, Georgia, serif;
 }
 
 /* Theme wrapper: gradient lives on fixed pseudo/fixed divs from ThemeContext */
@@ -418,4 +444,110 @@ body {
   border-left-color: rgba(255, 255, 255, 0.95);
   border-width: 10px 0 10px 16px;
   transform: translate(-50%, -50%);
+}
+
+/* ---- Intro threshold: split, seam, hover weight, expand ---- */
+.intro-seam {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 20%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.06) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+.intro-half {
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    flex 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.intro-half-explore {
+  background: rgba(0, 0, 0, 0.35);
+}
+.intro-half-explore:hover,
+.intro-threshold[data-hover="explore"] .intro-half-explore {
+  background: rgba(0, 0, 0, 0.5);
+  filter: contrast(1.02);
+}
+.intro-threshold[data-hover="drift"] .intro-half-explore {
+  opacity: 0.7;
+}
+.intro-half-drift {
+  background: rgba(0, 0, 0, 0.25);
+  filter: blur(0.5px);
+}
+.intro-half-drift:hover,
+.intro-threshold[data-hover="drift"] .intro-half-drift {
+  background: rgba(0, 0, 0, 0.42);
+  filter: blur(0);
+}
+.intro-threshold[data-hover="explore"] .intro-half-drift {
+  opacity: 0.75;
+}
+.intro-threshold[data-exiting="explore"] .intro-half-explore {
+  flex: 1 1 100%;
+}
+.intro-threshold[data-exiting="explore"] .intro-half-drift {
+  flex: 0 0 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.intro-threshold[data-exiting="drift"] .intro-half-drift {
+  flex: 1 1 100%;
+}
+.intro-threshold[data-exiting="drift"] .intro-half-explore {
+  flex: 0 0 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.intro-threshold[data-exiting] .intro-seam {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+/* Very faint motion: explore = subtle geometric shift; drift = soft flow */
+@keyframes intro-explore-shift {
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.06; }
+}
+@keyframes intro-drift-flow {
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.07; }
+}
+.intro-half-explore::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.03) 50%, transparent 60%);
+  background-size: 200% 100%;
+  animation: intro-explore-shift 12s ease-in-out infinite;
+  pointer-events: none;
+}
+.intro-half-drift::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 50% at 50% 50%, rgba(255,255,255,0.08), transparent 70%);
+  animation: intro-drift-flow 18s ease-in-out infinite;
+  pointer-events: none;
+}
+.intro-half-explore,
+.intro-half-drift {
+  position: relative;
+}
+.intro-main-fade-in {
+  animation: intro-main-fade-in 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes intro-main-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

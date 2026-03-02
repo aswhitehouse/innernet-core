@@ -49,6 +49,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
   const [interludeSecondary, setInterludeSecondary] = useState("");
   const [interludeMode, setInterludeMode] = useState<"intent" | "branch" | null>(null);
   const [pendingBranchForMorph, setPendingBranchForMorph] = useState<JourneyBranch | null>(null);
+  const [stayingInZone, setStayingInZone] = useState(false);
   const formingTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const morphTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -108,6 +109,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
       setInterludePrimary(getInterludePrimaryFromIntent(text));
       setInterludeSecondary(getInterludeSecondaryFromIntent(text));
       setInterludeMode("intent");
+      setStayingInZone(false);
       setFlowForming(false);
       setHeroRevealed(false);
       setReflectionRevealed(false);
@@ -120,7 +122,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
   }, [intentText, fetchSearch]);
 
   const handleStayInZone = useCallback(() => {
-    // Stay on first stop; no change
+    setStayingInZone(true);
   }, []);
 
   const handleInterludeComplete = useCallback(() => {
@@ -319,30 +321,43 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
                 </p>
               )}
 
-              {/* Framing: two options — only after branchRevealed when forming */}
+              {/* Framing: two options — or, after "Stay", a single Explore directions link */}
               {phase === "framing" && (branchRevealed || !flowForming) && (
                 <div
                   className={flowForming && !branchRevealed ? "opacity-0" : "flow-branch-in"}
                   style={{ animationDelay: flowForming ? "0ms" : undefined }}
                 >
-                  <div className="flex flex-wrap justify-center gap-4">
-                    <button
-                      type="button"
-                      onClick={handleStayInZone}
-                      className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-white/10"
-                      style={{ color: "var(--theme-text-tone)" }}
-                    >
-                      Stay in this zone
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleBranchOutward}
-                      className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-white/10"
-                      style={{ color: "var(--theme-text-tone)" }}
-                    >
-                      Branch outward
-                    </button>
-                  </div>
+                  {stayingInZone ? (
+                    <div className="flex flex-wrap justify-center gap-4">
+                      <button
+                        type="button"
+                        onClick={handleBranchOutward}
+                        className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-white/10"
+                        style={{ color: "var(--theme-text-tone)" }}
+                      >
+                        Explore directions
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap justify-center gap-4">
+                      <button
+                        type="button"
+                        onClick={handleStayInZone}
+                        className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-white/10"
+                        style={{ color: "var(--theme-text-tone)" }}
+                      >
+                        Stay in this zone
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleBranchOutward}
+                        className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-white/10"
+                        style={{ color: "var(--theme-text-tone)" }}
+                      >
+                        Branch outward
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

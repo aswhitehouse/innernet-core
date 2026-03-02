@@ -25,6 +25,9 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+/** Shown in bottom-left ambient line; not tied to real weather. Change to your city if you like. */
+const CLOUDY_LOCATION = "Sydney";
+
 export function ThemeProvider({
   children,
   watchActive = false,
@@ -78,11 +81,32 @@ export function ThemeProvider({
         className="theme-wrapper min-h-screen"
         style={wrapperStyle}
       >
-        {/* Static cinematic background. No dynamic transitions. */}
+        {/* Layer 1 (farthest): static clouds image with very subtle motion */}
+        <div
+          className="fixed inset-0 -z-20 bg-clouds-morph"
+          aria-hidden
+        />
+        {/* Layer 2 (atmosphere): dark gradient overlay — lighter so clouds show through */}
         <div
           className="fixed inset-0 -z-10"
-          style={{ background: watchTheme.gradient }}
+          style={{
+            background: "radial-gradient(ellipse 80% 80% at 50% 50%, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.6) 100%)",
+          }}
         />
+        {/* Layer 3: subtle base gradient tint */}
+        <div
+          className="fixed inset-0 -z-[5]"
+          style={{ background: watchTheme.gradient, opacity: 0.12 }}
+        />
+        {/* Bottom-left: subtle cloudy-day line (ambient, not connected to real weather) */}
+        <div
+          className="fixed bottom-4 right-4 z-0 flex items-center gap-2 text-xs font-light"
+          style={{ color: "var(--theme-text-tone)", opacity: 0.42 }}
+          aria-hidden
+        >
+          <span className="opacity-90" aria-hidden>☁</span>
+          <span>It&apos;s cloudy today in {CLOUDY_LOCATION}</span>
+        </div>
         {children}
       </div>
     </ThemeContext.Provider>
