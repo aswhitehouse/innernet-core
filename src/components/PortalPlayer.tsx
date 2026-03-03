@@ -235,19 +235,6 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
         </div>
       )}
 
-      {/* Zoom out control: overlay on desktop, inline on iOS to avoid conflicting with YouTube surface */}
-      {!isIOS && (
-        <div className="absolute right-3 top-3 z-20">
-          <button
-            type="button"
-            onClick={onExit}
-            className="rounded-xl border border-white/20 bg-black/60 px-4 py-2 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/10"
-          >
-            Zoom Out
-          </button>
-        </div>
-      )}
-
       {/* When video ends, cover YouTube end screen with our own "what next?" prompt */}
       {videoEnded && (
         <div
@@ -279,12 +266,12 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
         </div>
       )}
 
-      {viewPhase === "playing" && isIOS && (
-        <div className="mt-3 flex justify-end px-3 sm:hidden">
+      {viewPhase === "playing" && (
+        <div className="mt-3 flex justify-end px-3">
           <button
             type="button"
             onClick={onExit}
-            className="rounded-xl border border-white/20 bg-black/60 px-4 py-2 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-white/10"
+            className="rounded-xl border border-white/20 bg-black/60 px-4 py-2 text-xs sm:text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/10"
           >
             Zoom Out
           </button>
