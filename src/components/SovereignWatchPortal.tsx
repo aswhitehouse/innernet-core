@@ -50,10 +50,20 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
   const [interludeMode, setInterludeMode] = useState<"intent" | "branch" | null>(null);
   const [pendingBranchForMorph, setPendingBranchForMorph] = useState<JourneyBranch | null>(null);
   const [stayingInZone, setStayingInZone] = useState(false);
+  const [isMobileSurface, setIsMobileSurface] = useState(false);
   const formingTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const morphTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const isIdle = phase === "idle";
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobileSurface(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     if (phase !== "framing" || !flowForming) return;
@@ -127,6 +137,14 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
 
   const handleInterludeComplete = useCallback(() => {
     if (interludeMode === "intent") {
+      // Mobile: go straight into playing state with framed YouTube surface.
+      if (isMobileSurface && hero) {
+        setPhaseBeforePlay("framing");
+        setPlayingVideo(hero);
+        setPhase("playing");
+        setInterludeMode(null);
+        return;
+      }
       setPhase("framing");
       setFlowForming(true);
       setHeroRevealed(false);
@@ -176,7 +194,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
         }, MORPH_EXIT_MS)
       );
     }
-  }, [interludeMode, pendingBranchForMorph, reflection, fetchSearch, allVideos]);
+  }, [interludeMode, pendingBranchForMorph, reflection, fetchSearch, allVideos, isMobileSurface, hero]);
 
   const handleBranchOutward = useCallback(() => {
     const next = generateBranches(allVideos, currentTopic);
@@ -210,7 +228,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
       {/* Prompt bar at top */}
       <div
         className={`flex shrink-0 flex-col items-center px-4 ${
-          isIdle ? "flex-1 justify-center py-12" : "pt-4 pb-2"
+          isIdle ? "flex-1 justify-center py-12" : "pt-3 pb-2 sm:pt-4"
         }`}
       >
         <IntentInput
@@ -235,7 +253,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
 
       {/* Framing / Branching / Morphing / Interlude: stable container */}
       {(phase === "framing" || phase === "branching" || phase === "morphing" || phase === "interlude") && hero && (
-        <div className="relative flex flex-1 flex-col gap-8 min-h-0 overflow-y-auto px-4 pb-12 pt-2">
+        <div className="relative flex flex-1 flex-col gap-6 min-h-[70vh] overflow-y-auto px-0 pb-8 pt-1 sm:min-h-0 sm:px-4 sm:pb-12 sm:pt-2">
           {/* Directional interlude overlay — covers content during intent or branch declaration */}
           {phase === "interlude" && (
             <DirectionalInterlude
@@ -408,7 +426,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
 
       {/* Playing: embed only; exit returns to framing or branching */}
       {phase === "playing" && playingVideo && (
-        <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-4 pb-12 pt-2">
+        <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-0 pb-8 pt-1 sm:px-4 sm:pb-12 sm:pt-2">
           <PortalPlayer
             youtubeId={playingVideo.youtubeId}
             title={playingVideo.title}

@@ -83,7 +83,7 @@ function HomeContent({
       {/* Header: full width above */}
       <header
         className={`mb-8 transition-all duration-500 ease-out ${
-          activeTrack === "watch" ? "opacity-50" : ""
+          activeTrack === "watch" ? "opacity-0 pointer-events-none sm:opacity-50 sm:pointer-events-auto" : ""
         }`}
       >
         <h1
@@ -102,7 +102,11 @@ function HomeContent({
 
       <div className="flex flex-col gap-8 lg:flex-row lg:gap-6">
         {/* Left: suggested sources — title aligned with top of central pane */}
-        <aside className="w-full space-y-3 lg:w-40 lg:shrink-0">
+        <aside
+          className={`w-full space-y-3 lg:w-40 lg:shrink-0 ${
+            activeTrack === "watch" ? "hidden lg:block" : ""
+          }`}
+        >
           <div>
             <h2
               className="text-xs font-medium uppercase tracking-[0.18em] opacity-70"

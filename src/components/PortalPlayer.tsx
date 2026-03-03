@@ -37,6 +37,7 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullViewport, setFullViewport] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isPlayingRef = useRef(false);
   const durationRef = useRef(0);
@@ -49,12 +50,23 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
     return () => clearTimeout(t);
   }, [viewPhase]);
 
-  // When iframe loads, signal listening and immediately attempt muted autoplay.
-  // Starting muted satisfies most autoplay policies; we then unmute shortly after.
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    const ua = navigator.userAgent || "";
+    const iOS = /iP(hone|od|ad)/.test(ua);
+    setIsIOS(iOS);
+  }, []);
+
+  // When iframe loads, signal listening. On desktop we attempt muted autoplay;
+  // on iOS we let the native red play button act as the main affordance.
   const onIframeLoad = useCallback(() => {
     const iframe = iframeRef.current;
     sendListening(iframe);
-    // Start muted, play, then gently unmute.
+    if (isIOS) {
+      setViewPhase("playing");
+      return;
+    }
+    // Non‑iOS: start muted, play, then gently unmute.
     sendCommand(iframe, "mute");
     sendCommand(iframe, "playVideo");
     setIsPlaying(true);
@@ -62,7 +74,7 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
     window.setTimeout(() => {
       sendCommand(iframeRef.current, "unMute");
     }, 200);
-  }, []);
+  }, [isIOS]);
 
   // Listen for messages from YouTube embed (no widget script = no postMessage origin errors)
   useEffect(() => {
@@ -179,7 +191,9 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
   return (
     <div
       ref={containerRef}
-      className={`relative overflow-hidden rounded-2xl bg-black shadow-2xl ${fullViewport ? "fixed inset-0 z-50 flex flex-col rounded-none" : ""}`}
+      className={`relative overflow-hidden rounded-none bg-black shadow-2xl sm:rounded-2xl ${
+        fullViewport ? "fixed inset-0 z-50 flex flex-col rounded-none" : ""
+      }`}
       style={{ color: "var(--theme-text-tone)" }}
     >
       {viewPhase === "toBlack" && (
@@ -187,10 +201,14 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
       )}
 
       {(viewPhase === "loading" || viewPhase === "playing") && (
-        <div className={`relative w-full bg-black isolate ${fullViewport ? "flex-1 min-h-0" : "aspect-video"}`}>
+        <div
+          className={`relative w-full bg-black isolate ${
+            fullViewport ? "flex-1 min-h-0" : "min-h-[60vh] sm:min-h-0 sm:aspect-video"
+          }`}
+        >
           <iframe
             ref={iframeRef}
-            src={buildEmbedUrl(youtubeId, true)}
+            src={buildEmbedUrl(youtubeId, !isIOS)}
             title={title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
@@ -201,11 +219,13 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
             }}
             onLoad={onIframeLoad}
           />
-          {/* Mask YouTube branding (logo + play button) on mobile and desktop; pointer-events none so taps pass through */}
-          <div
-            className="player-yt-mask absolute inset-0 rounded-2xl"
-            aria-hidden
-          />
+          {/* Desktop / non‑iOS: mask YouTube branding; on iOS let native UI be contextualised by the frame */}
+          {!isIOS && (
+            <div
+              className="player-yt-mask absolute inset-0 rounded-2xl"
+              aria-hidden
+            />
+          )}
           {viewPhase === "loading" && (
             <div
               className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/90 player-loading-shimmer"
@@ -215,15 +235,18 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
         </div>
       )}
 
-      <div className="absolute right-3 top-3 z-20">
-        <button
-          type="button"
-          onClick={onExit}
-          className="rounded-xl border border-white/20 bg-black/60 px-4 py-2 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/10"
-        >
-          Zoom Out
-        </button>
-      </div>
+      {/* Zoom out control: overlay on desktop, inline on iOS to avoid conflicting with YouTube surface */}
+      {!isIOS && (
+        <div className="absolute right-3 top-3 z-20">
+          <button
+            type="button"
+            onClick={onExit}
+            className="rounded-xl border border-white/20 bg-black/60 px-4 py-2 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/10"
+          >
+            Zoom Out
+          </button>
+        </div>
+      )}
 
       {/* When video ends, cover YouTube end screen with our own "what next?" prompt */}
       {videoEnded && (
@@ -253,6 +276,18 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
               Zoom out — choose another direction
             </button>
           </div>
+        </div>
+      )}
+
+      {viewPhase === "playing" && isIOS && (
+        <div className="mt-3 flex justify-end px-3 sm:hidden">
+          <button
+            type="button"
+            onClick={onExit}
+            className="rounded-xl border border-white/20 bg-black/60 px-4 py-2 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-white/10"
+          >
+            Zoom Out
+          </button>
         </div>
       )}
 
@@ -306,14 +341,16 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
                 aria-label="Volume"
               />
             </div>
-            <button
-              type="button"
-              onClick={toggleFullscreen}
-              className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/20"
-              aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-            >
-              {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-            </button>
+            {!isIOS && (
+              <button
+                type="button"
+                onClick={toggleFullscreen}
+                className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/20"
+                aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+              >
+                {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+              </button>
+            )}
           </div>
         </div>
       )}

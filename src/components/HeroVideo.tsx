@@ -27,13 +27,13 @@ export function HeroVideo({ video, zoneLabel, onPlay }: HeroVideoProps) {
   const isClickable = Boolean(onPlay);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-black/40 shadow-2xl">
+    <div className="relative overflow-hidden rounded-none bg-black/40 shadow-2xl sm:rounded-2xl">
       <div
         className="absolute -z-10 inset-x-2 top-2 bottom-2 rounded-2xl"
         style={{ boxShadow: "0 24px 48px -12px rgba(0,0,0,0.5)" }}
       />
       <div
-        className={`group relative aspect-[16/9] min-h-[260px] w-full sm:min-h-[300px] ${isClickable ? "cursor-pointer" : ""}`}
+        className={`group relative aspect-[16/9] min-h-[60vh] w-full sm:min-h-[300px] ${isClickable ? "cursor-pointer" : ""}`}
         onClick={isClickable ? onPlay : undefined}
         onKeyDown={isClickable ? (e) => e.key === "Enter" && onPlay?.() : undefined}
         role={isClickable ? "button" : undefined}
