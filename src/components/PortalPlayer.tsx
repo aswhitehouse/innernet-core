@@ -267,18 +267,6 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
       )}
 
       {viewPhase === "playing" && (
-        <div className="mt-3 flex justify-end px-3">
-          <button
-            type="button"
-            onClick={onExit}
-            className="rounded-xl border border-white/20 bg-black/60 px-4 py-2 text-xs sm:text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/10"
-          >
-            Zoom Out
-          </button>
-        </div>
-      )}
-
-      {viewPhase === "playing" && (
         <div
           className="absolute bottom-0 left-0 right-0 z-10 flex flex-col gap-2 rounded-b-2xl p-3"
           style={{

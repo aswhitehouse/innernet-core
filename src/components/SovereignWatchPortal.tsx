@@ -426,13 +426,22 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
 
       {/* Playing: embed only; exit returns to framing or branching */}
       {phase === "playing" && playingVideo && (
-        <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-0 pb-8 pt-1 sm:px-4 sm:pb-12 sm:pt-2">
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-0 pb-8 pt-1 sm:px-4 sm:pb-12 sm:pt-2">
           <PortalPlayer
             youtubeId={playingVideo.youtubeId}
             title={playingVideo.title}
             thumbnailUrl={playingVideo.thumbnailUrl}
             onExit={handleExitPlayer}
           />
+          <div className="mt-2 flex justify-end px-3 sm:px-0">
+            <button
+              type="button"
+              onClick={handleExitPlayer}
+              className="rounded-xl border border-white/20 bg-black/60 px-4 py-2 text-xs sm:text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/10"
+            >
+              Zoom Out
+            </button>
+          </div>
         </div>
       )}
     </div>
