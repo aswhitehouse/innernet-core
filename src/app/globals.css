@@ -434,13 +434,16 @@ body {
   background: rgba(255, 255, 255, 0.18);
   transform: scale(1.04);
 }
-/* Mask YouTube logo and play button overlay on iframe (mobile + desktop); taps pass through */
+/* Mask YouTube logo and play button overlay on iframe (mobile + desktop); taps pass through.
+   translateZ promotes mask to its own layer so it stays above the iframe on iOS after play. */
 .player-yt-mask {
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
+  transform: translateZ(1px);
+  -webkit-transform: translateZ(1px);
   background:
     linear-gradient(135deg, transparent 45%, rgba(0,0,0,0.85) 100%),
-    radial-gradient(ellipse 50% 50% at 50% 50%, rgba(0,0,0,0.4), transparent 65%);
+    radial-gradient(ellipse 55% 55% at 50% 50%, rgba(0,0,0,0.65), transparent 70%);
 }
 .player-poster-play::after {
   content: "";

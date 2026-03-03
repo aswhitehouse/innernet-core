@@ -187,14 +187,14 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
       )}
 
       {(viewPhase === "loading" || viewPhase === "playing") && (
-        <div className={`relative w-full bg-black ${fullViewport ? "flex-1 min-h-0" : "aspect-video"}`}>
+        <div className={`relative w-full bg-black isolate ${fullViewport ? "flex-1 min-h-0" : "aspect-video"}`}>
           <iframe
             ref={iframeRef}
             src={buildEmbedUrl(youtubeId, true)}
             title={title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
-            className="absolute inset-0 h-full w-full rounded-2xl"
+            className="absolute inset-0 h-full w-full rounded-2xl z-0"
             style={{
               opacity: viewPhase === "playing" ? 1 : 0,
               transition: `opacity ${FADE_UP_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
