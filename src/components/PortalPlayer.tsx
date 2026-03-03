@@ -35,6 +35,7 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(80);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullViewport, setFullViewport] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isPlayingRef = useRef(false);
@@ -127,13 +128,29 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
   const toggleFullscreen = useCallback(() => {
     const cont = containerRef.current;
     if (!cont) return;
-    if (!document.fullscreenElement) {
-      cont.requestFullscreen?.();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen?.();
-      setIsFullscreen(false);
+
+    const useNativeFullscreen =
+      typeof window !== "undefined" &&
+      (typeof document.documentElement.requestFullscreen === "function" ||
+        typeof (document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void }).webkitRequestFullscreen === "function");
+    const isMobileViewport =
+      typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
+
+    if (useNativeFullscreen && !isMobileViewport) {
+      if (!document.fullscreenElement && !(document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement) {
+        const req = cont.requestFullscreen ?? (cont as HTMLElement & { webkitRequestFullscreen?: () => void }).webkitRequestFullscreen;
+        req?.call(cont);
+        setIsFullscreen(true);
+      } else {
+        const exit = document.exitFullscreen ?? (document as Document & { webkitExitFullscreen?: () => void }).webkitExitFullscreen;
+        exit?.call(document);
+        setIsFullscreen(false);
+      }
+      return;
     }
+
+    setFullViewport((v) => !v);
+    setIsFullscreen((v) => !v);
   }, []);
 
   const handleReplay = useCallback(() => {
@@ -145,9 +162,16 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
   }, []);
 
   useEffect(() => {
-    const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    const onFullscreenChange = () => {
+      const fsEl = document.fullscreenElement ?? (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement;
+      setIsFullscreen(!!fsEl);
+    };
     document.addEventListener("fullscreenchange", onFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", onFullscreenChange);
+    };
   }, []);
 
   const progressFrac = duration > 0 ? Math.min(1, currentTime / duration) : 0;
@@ -155,7 +179,7 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
   return (
     <div
       ref={containerRef}
-      className="relative overflow-hidden rounded-2xl bg-black shadow-2xl"
+      className={`relative overflow-hidden rounded-2xl bg-black shadow-2xl ${fullViewport ? "fixed inset-0 z-50 flex flex-col rounded-none" : ""}`}
       style={{ color: "var(--theme-text-tone)" }}
     >
       {viewPhase === "toBlack" && (
@@ -163,7 +187,7 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
       )}
 
       {(viewPhase === "loading" || viewPhase === "playing") && (
-        <div className="relative aspect-video w-full bg-black">
+        <div className={`relative w-full bg-black ${fullViewport ? "flex-1 min-h-0" : "aspect-video"}`}>
           <iframe
             ref={iframeRef}
             src={buildEmbedUrl(youtubeId, true)}
@@ -176,6 +200,11 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
               transition: `opacity ${FADE_UP_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
             }}
             onLoad={onIframeLoad}
+          />
+          {/* Mask YouTube branding (logo + play button) on mobile and desktop; pointer-events none so taps pass through */}
+          <div
+            className="player-yt-mask absolute inset-0 rounded-2xl"
+            aria-hidden
           />
           {viewPhase === "loading" && (
             <div
