@@ -238,6 +238,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
           onSubmit={handleSubmitIntent}
           disabled={phase === "loading"}
           interpreting={phase === "loading"}
+          compactPill={isMobileSurface && !isIdle}
           placeholder={PORTAL_PLACEHOLDER}
         />
         {searchError && (
@@ -253,7 +254,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
 
       {/* Framing / Branching / Morphing / Interlude: stable container */}
       {(phase === "framing" || phase === "branching" || phase === "morphing" || phase === "interlude") && hero && (
-        <div className="relative flex flex-1 flex-col gap-6 min-h-[70vh] overflow-y-auto px-0 pb-8 pt-1 sm:min-h-0 sm:px-4 sm:pb-12 sm:pt-2">
+        <div className="relative flex flex-1 flex-col gap-6 min-h-[85vh] overflow-y-auto px-0 pb-8 pt-1 sm:min-h-0 sm:px-4 sm:pb-12 sm:pt-2">
           {/* Directional interlude overlay — covers content during intent or branch declaration */}
           {phase === "interlude" && (
             <DirectionalInterlude
@@ -426,23 +427,118 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
 
       {/* Playing: embed only; exit returns to framing or branching */}
       {phase === "playing" && playingVideo && (
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-0 pb-8 pt-1 sm:px-4 sm:pb-12 sm:pt-2">
-          <PortalPlayer
-            youtubeId={playingVideo.youtubeId}
-            title={playingVideo.title}
-            thumbnailUrl={playingVideo.thumbnailUrl}
-            onExit={handleExitPlayer}
+        <>
+          {/* Slightly darker background during playback so video owns the frame */}
+          <div
+            className="fixed inset-0 z-0 bg-black/20 pointer-events-none sm:bg-transparent"
+            aria-hidden
           />
-          <div className="mt-2 flex justify-end px-3 sm:px-0">
-            <button
-              type="button"
-              onClick={handleExitPlayer}
-              className="rounded-xl border border-white/20 bg-black/60 px-4 py-2 text-xs sm:text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/10"
-            >
-              Zoom Out
-            </button>
-          </div>
-        </div>
+          {isMobileSurface ? (
+            <div className="relative z-10 flex flex-1 flex-col px-4 pb-8 pt-2 sm:px-4 sm:pb-12 sm:pt-4">
+              <div className="mx-0 overflow-hidden rounded-2xl bg-black/40 shadow-2xl">
+                {/* Top: YouTube player in 16:9, like the native app */}
+                <PortalPlayer
+                  youtubeId={playingVideo.youtubeId}
+                  title={playingVideo.title}
+                  thumbnailUrl={playingVideo.thumbnailUrl}
+                  onExit={handleExitPlayer}
+                />
+                {/* Bottom: Innernet guide panel — replaces comments */}
+                <div className="border-t border-white/10 bg-black/40 px-4 py-3 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p
+                      className="text-[10px] font-medium uppercase tracking-[0.18em] opacity-60"
+                      style={{ color: "var(--theme-text-tone)" }}
+                    >
+                      Guide
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleExitPlayer}
+                      className="rounded-xl border border-white/20 bg-black/60 px-3 py-1.5 text-[11px] font-medium backdrop-blur-sm transition-colors hover:bg-white/10"
+                    >
+                      Zoom Out
+                    </button>
+                  </div>
+                  <p
+                    className="text-xs font-light leading-relaxed opacity-90"
+                    style={{ color: "var(--theme-text-tone)" }}
+                  >
+                    {reflection}
+                  </p>
+                  {/* Synthetic guide chat preview — shows how the companion might speak */}
+                  <div className="mt-1 space-y-1.5 text-[11px] leading-relaxed">
+                    <div className="inline-flex max-w-full flex-col rounded-2xl bg-white/5 px-3 py-2">
+                      <span className="text-[9px] font-medium uppercase tracking-[0.18em] opacity-60">
+                        Guide
+                      </span>
+                      <span className="mt-1 opacity-90" style={{ color: "var(--theme-text-tone)" }}>
+                        I&apos;m treating this as a quiet walkthrough of {currentTopic || "this topic"}. Notice how it paces and what it lingers on.
+                      </span>
+                    </div>
+                    <div className="inline-flex max-w-full flex-col self-end rounded-2xl bg-white/3 px-3 py-2 text-right">
+                      <span className="text-[9px] font-medium uppercase tracking-[0.18em] opacity-60">
+                        You
+                      </span>
+                      <span className="mt-1 opacity-80" style={{ color: "var(--theme-text-tone)" }}>
+                        Help me see what&apos;s essential here, not just what&apos;s entertaining.
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-1 flex flex-wrap justify-center gap-3">
+                    {stayingInZone ? (
+                      <button
+                        type="button"
+                        onClick={handleBranchOutward}
+                        className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium transition-colors hover:bg-white/10"
+                        style={{ color: "var(--theme-text-tone)" }}
+                      >
+                        Explore directions
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handleStayInZone}
+                          className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium transition-colors hover:bg-white/10"
+                          style={{ color: "var(--theme-text-tone)" }}
+                        >
+                          Stay in this zone
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleBranchOutward}
+                          className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium transition-colors hover:bg-white/10"
+                          style={{ color: "var(--theme-text-tone)" }}
+                        >
+                          Branch outward
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="relative z-10 flex flex-1 flex-col gap-4 overflow-y-auto px-0 pb-8 pt-1 sm:px-4 sm:pb-12 sm:pt-2">
+              <PortalPlayer
+                youtubeId={playingVideo.youtubeId}
+                title={playingVideo.title}
+                thumbnailUrl={playingVideo.thumbnailUrl}
+                onExit={handleExitPlayer}
+              />
+              <div className="mt-2 flex justify-end px-3 sm:px-0">
+                <button
+                  type="button"
+                  onClick={handleExitPlayer}
+                  className="rounded-xl border border-white/20 bg-black/60 px-4 py-2 text-xs sm:text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/10"
+                >
+                  Zoom Out
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

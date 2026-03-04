@@ -203,16 +203,30 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
       {(viewPhase === "loading" || viewPhase === "playing") && (
         <div
           className={`relative w-full bg-black isolate ${
-            fullViewport ? "flex-1 min-h-0" : "min-h-[60vh] sm:min-h-0 sm:aspect-video"
+            fullViewport ? "flex-1 min-h-0" : "aspect-video"
           }`}
         >
+          {/* Blur-zoomed video backdrop to soften hard black bars, especially for letterboxed sources */}
+          {thumbnailUrl && (
+            <div
+              className="absolute inset-0 z-0 rounded-2xl"
+              style={{
+                backgroundImage: `url(${thumbnailUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: "blur(26px) saturate(1.05) brightness(0.55)",
+                transform: "scale(1.08)",
+              }}
+              aria-hidden
+            />
+          )}
           <iframe
             ref={iframeRef}
             src={buildEmbedUrl(youtubeId, !isIOS)}
             title={title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
-            className="absolute inset-0 h-full w-full rounded-2xl z-0"
+            className="absolute inset-0 z-10 h-full w-full rounded-2xl"
             style={{
               opacity: viewPhase === "playing" ? 1 : 0,
               transition: `opacity ${FADE_UP_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
@@ -222,7 +236,7 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
           {/* Desktop / non‑iOS: mask YouTube branding; on iOS let native UI be contextualised by the frame */}
           {!isIOS && (
             <div
-              className="player-yt-mask absolute inset-0 rounded-2xl"
+              className="player-yt-mask absolute inset-0 z-20 rounded-2xl"
               aria-hidden
             />
           )}

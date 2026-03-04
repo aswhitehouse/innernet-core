@@ -7,6 +7,8 @@ interface IntentInputProps {
   onSubmit: () => void;
   disabled?: boolean;
   interpreting?: boolean;
+  /** When true, render as compact pill (e.g. mobile when hero is up) */
+  compactPill?: boolean;
   onFocus?: () => void;
   onBlur?: () => void;
   /** Default: "What do you want to explore on YouTube?" */
@@ -22,6 +24,7 @@ export function IntentInput({
   onSubmit,
   disabled = false,
   interpreting = false,
+  compactPill = false,
   onFocus,
   onBlur,
   placeholder = DEFAULT_PLACEHOLDER,
@@ -29,7 +32,7 @@ export function IntentInput({
   const isIdle = variant === "idle";
 
   return (
-    <div className="flex w-full max-w-2xl flex-col gap-4">
+    <div className={`flex w-full flex-col gap-4 ${compactPill ? "max-w-xs" : "max-w-2xl"}`}>
       <div className="relative w-full">
         <input
           type="text"
@@ -41,9 +44,11 @@ export function IntentInput({
           placeholder={placeholder}
           disabled={disabled}
           className={`w-full rounded-2xl border border-white/15 bg-white/5 text-center font-light placeholder:opacity-60 focus:border-white/25 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-white/20 disabled:opacity-50 transition-all duration-300 ${
-            isIdle
-              ? "px-6 py-5 text-lg"
-              : "px-4 py-3 text-base"
+            compactPill
+              ? "rounded-full px-4 py-2 text-sm"
+              : isIdle
+                ? "px-6 py-5 text-lg"
+                : "px-4 py-3 text-base"
           } ${interpreting ? "intent-interpreting" : ""}`}
           style={{
             color: "var(--theme-text-tone)",
@@ -52,12 +57,12 @@ export function IntentInput({
         />
         {interpreting && (
           <div
-            className="pointer-events-none absolute inset-0 rounded-2xl intent-shimmer-overlay"
+            className={`pointer-events-none absolute inset-0 intent-shimmer-overlay ${compactPill ? "rounded-full" : "rounded-2xl"}`}
             aria-hidden
           />
         )}
       </div>
-      {isIdle && (
+      {isIdle && !compactPill && (
         <p className="text-center text-xs opacity-50" style={{ color: "var(--theme-text-tone)" }}>
           Describe your mood or curiosity in a sentence. The surface will reshape around it.
         </p>
