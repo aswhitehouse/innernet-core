@@ -10,6 +10,7 @@ import { HeroVideo } from "./HeroVideo";
 import { PortalPlayer } from "./PortalPlayer";
 import { JourneyBranchCard } from "./JourneyBranchCard";
 import { DirectionalInterlude } from "./DirectionalInterlude";
+import { WatchGuidePanel } from "./WatchGuidePanel";
 
 type Phase = "idle" | "loading" | "interlude" | "framing" | "branching" | "playing" | "morphing";
 
@@ -171,15 +172,25 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
         setHero(branch.video);
         setAllVideos(videos);
         setBranches(nextBranches);
-        setMorphStep("enter");
         setPendingBranch(null);
-        morphTimers.current.push(
-          setTimeout(() => {
-            setBranchLoading(false);
-            setPhase("branching");
-            setMorphStep(null);
-          }, MORPH_ENTER_MS)
-        );
+
+        // Mobile: after morphing, move straight into playing the chosen branch video.
+        if (isMobileSurface) {
+          setBranchLoading(false);
+          setMorphStep(null);
+          setPhaseBeforePlay("branching");
+          setPlayingVideo(branch.video);
+          setPhase("playing");
+        } else {
+          setMorphStep("enter");
+          morphTimers.current.push(
+            setTimeout(() => {
+              setBranchLoading(false);
+              setPhase("branching");
+              setMorphStep(null);
+            }, MORPH_ENTER_MS)
+          );
+        }
       };
 
       morphTimers.current.push(
@@ -282,62 +293,67 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
                 </div>
               )}
 
-              {/* Hero first (interlude establishes hierarchy: hero secondary, then reflection, then branches) */}
-              <div
-                className={`flex flex-col gap-3 ${
-                  morphStep === "exit"
-                    ? "morph-hero-exit"
-                    : morphStep === "enter"
-                      ? "morph-hero-enter"
-                      : flowForming
-                        ? `flow-form-hero-wrap ${heroRevealed ? "flow-hero-revealed" : ""}`
-                        : ""
-                }`}
-              >
-                <p
-                  className={`text-[10px] font-medium uppercase tracking-widest opacity-50 ${
-                    morphStep === "enter" ? "" : flowForming && !heroRevealed ? "opacity-0" : ""
-                  }`}
-                  style={{ color: "var(--theme-text-tone)", fontVariant: "small-caps" }}
-                >
-                  First stop
-                </p>
-                <div className={morphStep === "enter" ? "" : flowForming && heroRevealed ? "flow-hero-in" : ""}>
-                  <HeroVideo video={hero} onPlay={handlePlayHero} />
-                </div>
-              </div>
-
-              {/* Reflection below hero — smaller, revealed after hero when forming */}
-              {morphStep === "exit" ? (
-                <p
-                  className="morph-reflection-to-breadcrumb text-center font-light"
-                  style={{ color: "var(--theme-text-tone)" }}
-                >
-                  {reflection}
-                </p>
-              ) : morphStep === "enter" ? (
-                <p
-                  className="flow-reflection-in text-center text-xs font-light opacity-90"
-                  style={{ color: "var(--theme-text-tone)" }}
-                >
-                  {reflection}
-                </p>
-              ) : flowForming ? (
-                reflectionRevealed && (
-                  <p
-                    className="flow-reflection-in text-center text-xs font-light opacity-90"
-                    style={{ color: "var(--theme-text-tone)" }}
+              {/* Hero + reflection: on mobile we hide this in branching/morphing so options sit directly under the prompt */}
+              {!(isMobileSurface && (phase === "branching" || phase === "morphing")) && (
+                <>
+                  {/* Hero first (interlude establishes hierarchy: hero secondary, then reflection, then branches) */}
+                  <div
+                    className={`flex flex-col gap-3 ${
+                      morphStep === "exit"
+                        ? "morph-hero-exit"
+                        : morphStep === "enter"
+                          ? "morph-hero-enter"
+                          : flowForming
+                            ? `flow-form-hero-wrap ${heroRevealed ? "flow-hero-revealed" : ""}`
+                            : ""
+                    }`}
                   >
-                    {reflection}
-                  </p>
-                )
-              ) : (
-                <p
-                  className="text-center text-xs font-light opacity-90"
-                  style={{ color: "var(--theme-text-tone)" }}
-                >
-                  {reflection}
-                </p>
+                    <p
+                      className={`text-[10px] font-medium uppercase tracking-widest opacity-50 ${
+                        morphStep === "enter" ? "" : flowForming && !heroRevealed ? "opacity-0" : ""
+                      }`}
+                      style={{ color: "var(--theme-text-tone)", fontVariant: "small-caps" }}
+                    >
+                      First stop
+                    </p>
+                    <div className={morphStep === "enter" ? "" : flowForming && heroRevealed ? "flow-hero-in" : ""}>
+                      <HeroVideo video={hero} onPlay={handlePlayHero} />
+                    </div>
+                  </div>
+
+                  {/* Reflection below hero — smaller, revealed after hero when forming */}
+                  {morphStep === "exit" ? (
+                    <p
+                      className="morph-reflection-to-breadcrumb text-center font-light"
+                      style={{ color: "var(--theme-text-tone)" }}
+                    >
+                      {reflection}
+                    </p>
+                  ) : morphStep === "enter" ? (
+                    <p
+                      className="flow-reflection-in text-center text-xs font-light opacity-90"
+                      style={{ color: "var(--theme-text-tone)" }}
+                    >
+                      {reflection}
+                    </p>
+                  ) : flowForming ? (
+                    reflectionRevealed && (
+                      <p
+                        className="flow-reflection-in text-center text-xs font-light opacity-90"
+                        style={{ color: "var(--theme-text-tone)" }}
+                      >
+                        {reflection}
+                      </p>
+                    )
+                  ) : (
+                    <p
+                      className="text-center text-xs font-light opacity-90"
+                      style={{ color: "var(--theme-text-tone)" }}
+                    >
+                      {reflection}
+                    </p>
+                  )}
+                </>
               )}
 
               {/* Framing: two options — or, after "Stay", a single Explore directions link */}
@@ -383,6 +399,14 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
               {/* Branching / Morphing: transition sentence + cards */}
               {(phase === "branching" || phase === "morphing") && (
                 <>
+                  {isMobileSurface && (
+                    <p
+                      className="text-center text-xs font-light opacity-80"
+                      style={{ color: "var(--theme-text-tone)" }}
+                    >
+                      {reflection}
+                    </p>
+                  )}
                   <p
                     className={`text-center text-sm font-light opacity-80 ${
                       morphStep === "enter" ? "flow-branch-in" : ""
@@ -444,79 +468,15 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
                   onExit={handleExitPlayer}
                 />
                 {/* Bottom: Innernet guide panel — replaces comments */}
-                <div className="border-t border-white/10 bg-black/40 px-4 py-3 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p
-                      className="text-[10px] font-medium uppercase tracking-[0.18em] opacity-60"
-                      style={{ color: "var(--theme-text-tone)" }}
-                    >
-                      Guide
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleExitPlayer}
-                      className="rounded-xl border border-white/20 bg-black/60 px-3 py-1.5 text-[11px] font-medium backdrop-blur-sm transition-colors hover:bg-white/10"
-                    >
-                      Zoom Out
-                    </button>
-                  </div>
-                  <p
-                    className="text-xs font-light leading-relaxed opacity-90"
-                    style={{ color: "var(--theme-text-tone)" }}
-                  >
-                    {reflection}
-                  </p>
-                  {/* Synthetic guide chat preview — shows how the companion might speak */}
-                  <div className="mt-1 space-y-1.5 text-[11px] leading-relaxed">
-                    <div className="inline-flex max-w-full flex-col rounded-2xl bg-white/5 px-3 py-2">
-                      <span className="text-[9px] font-medium uppercase tracking-[0.18em] opacity-60">
-                        Guide
-                      </span>
-                      <span className="mt-1 opacity-90" style={{ color: "var(--theme-text-tone)" }}>
-                        I&apos;m treating this as a quiet walkthrough of {currentTopic || "this topic"}. Notice how it paces and what it lingers on.
-                      </span>
-                    </div>
-                    <div className="inline-flex max-w-full flex-col self-end rounded-2xl bg-white/3 px-3 py-2 text-right">
-                      <span className="text-[9px] font-medium uppercase tracking-[0.18em] opacity-60">
-                        You
-                      </span>
-                      <span className="mt-1 opacity-80" style={{ color: "var(--theme-text-tone)" }}>
-                        Help me see what&apos;s essential here, not just what&apos;s entertaining.
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mt-1 flex flex-wrap justify-center gap-3">
-                    {stayingInZone ? (
-                      <button
-                        type="button"
-                        onClick={handleBranchOutward}
-                        className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium transition-colors hover:bg-white/10"
-                        style={{ color: "var(--theme-text-tone)" }}
-                      >
-                        Explore directions
-                      </button>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={handleStayInZone}
-                          className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium transition-colors hover:bg-white/10"
-                          style={{ color: "var(--theme-text-tone)" }}
-                        >
-                          Stay in this zone
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleBranchOutward}
-                          className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium transition-colors hover:bg-white/10"
-                          style={{ color: "var(--theme-text-tone)" }}
-                        >
-                          Branch outward
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
+                <WatchGuidePanel
+                  layout="card"
+                  reflection={reflection}
+                  currentTopic={currentTopic}
+                  stayingInZone={stayingInZone}
+                  onStayInZone={handleStayInZone}
+                  onBranchOutward={handleBranchOutward}
+                  onZoomOut={handleExitPlayer}
+                />
               </div>
             </div>
           ) : (
@@ -527,15 +487,15 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
                 thumbnailUrl={playingVideo.thumbnailUrl}
                 onExit={handleExitPlayer}
               />
-              <div className="mt-2 flex justify-end px-3 sm:px-0">
-                <button
-                  type="button"
-                  onClick={handleExitPlayer}
-                  className="rounded-xl border border-white/20 bg-black/60 px-4 py-2 text-xs sm:text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/10"
-                >
-                  Zoom Out
-                </button>
-              </div>
+              <WatchGuidePanel
+                layout="standalone"
+                reflection={reflection}
+                currentTopic={currentTopic}
+                stayingInZone={stayingInZone}
+                onStayInZone={handleStayInZone}
+                onBranchOutward={handleBranchOutward}
+                onZoomOut={handleExitPlayer}
+              />
             </div>
           )}
         </>
