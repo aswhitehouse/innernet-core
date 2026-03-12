@@ -97,6 +97,24 @@ body {
   box-sizing: border-box;
 }
 
+/*
+ * iOS Safari zooms the viewport when focusing inputs with computed font-size < 16px.
+ * Ensure focusable fields are at least 16px on small screens (Tailwind text-base).
+ * Component-level classes handle main inputs; this is a safety net.
+ */
+@media (max-width: 640px) {
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 1rem; /* 16px — prevents iOS focus zoom */
+  }
+}
+
 .font-display {
   font-family: var(--font-display), "Playfair Display", ui-serif, Georgia, serif;
 }

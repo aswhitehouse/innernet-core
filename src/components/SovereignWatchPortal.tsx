@@ -282,23 +282,9 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
           className={
             isIdle
               ? "flex w-full max-w-xl flex-col items-stretch"
-              : "flex w-full max-w-2xl flex-col items-center gap-2"
+              : "flex w-full max-w-2xl flex-col items-center"
           }
         >
-          {!isIdle && phase !== "loading" && (
-            <div className="flex w-full flex-wrap items-center justify-center gap-2 px-1">
-              <button
-                type="button"
-                onClick={handleResetToFreshSearch}
-                className="rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
-              >
-                New search
-              </button>
-              <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                Wrong results? Start over with a new query.
-              </span>
-            </div>
-          )}
           <IntentInput
             variant={isIdle ? "idle" : "anchored"}
             value={intentText}

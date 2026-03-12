@@ -129,7 +129,7 @@ export function IdentityGate({ onIdentified }: IdentityGateProps) {
               onKeyDown={(e) => e.key === "Enter" && handleTokenSubmit()}
               placeholder="Paste your token"
               autoComplete="off"
-              className="w-full rounded-xl border border-black/10 bg-black/[0.03] px-3 py-2.5 text-sm text-black placeholder:text-black/40 focus:border-black/20 focus:outline-none focus:ring-2 focus:ring-black/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/40"
+              className="w-full rounded-xl border border-black/10 bg-black/[0.03] px-3 py-2.5 text-base text-black placeholder:text-black/40 focus:border-black/20 focus:outline-none focus:ring-2 focus:ring-black/10 sm:text-sm dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/40"
             />
             <button
               type="button"
@@ -154,7 +154,7 @@ export function IdentityGate({ onIdentified }: IdentityGateProps) {
               onKeyDown={(e) => e.key === "Enter" && handleRegister()}
               placeholder="What should we call you?"
               autoComplete="name"
-              className="w-full rounded-xl border border-black/10 bg-black/[0.03] px-3 py-2.5 text-sm text-black placeholder:text-black/40 focus:border-black/20 focus:outline-none focus:ring-2 focus:ring-black/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/40"
+              className="w-full rounded-xl border border-black/10 bg-black/[0.03] px-3 py-2.5 text-base text-black placeholder:text-black/40 focus:border-black/20 focus:outline-none focus:ring-2 focus:ring-black/10 sm:text-sm dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/40"
             />
             <button
               type="button"

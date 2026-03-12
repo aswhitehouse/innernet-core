@@ -44,9 +44,10 @@ export function WatchGuidePanel({
     ? "inline-flex w-full max-w-full min-w-0 flex-col rounded-xl border border-zinc-200 bg-white px-3 py-2.5 shadow-sm dark:border-zinc-600 dark:bg-zinc-900"
     : "inline-flex w-full max-w-full min-w-0 flex-col rounded-2xl border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-600 dark:bg-zinc-900";
 
+  /* text-base (16px) avoids iOS Safari auto-zoom on focus; sm:text-sm tightens on larger screens */
   const inputClass = isCard
-    ? "flex-1 rounded-full border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 shadow-inner focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:ring-white/10"
-    : "flex-1 rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-[11px] text-zinc-900 placeholder:text-zinc-500 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900/10 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100";
+    ? "flex-1 rounded-full border border-zinc-300 bg-white px-3 py-2 text-base text-zinc-900 placeholder:text-zinc-500 shadow-inner focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 sm:text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:ring-white/10"
+    : "flex-1 rounded-full border border-zinc-300 bg-white px-3 py-2 text-base text-zinc-900 placeholder:text-zinc-500 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900/10 sm:text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100";
 
   const btnSecondary =
     "rounded-full border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 active:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700";
