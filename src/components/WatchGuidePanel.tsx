@@ -60,6 +60,8 @@ export function WatchGuidePanel({
 
   const [summary, setSummary] = useState<string>("");
   const [userMessage, setUserMessage] = useState<string>("");
+  /** Last message successfully sent — shown in You bubble while input stays empty */
+  const [lastSentUserMessage, setLastSentUserMessage] = useState<string>("");
   const [reply, setReply] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
@@ -82,6 +84,7 @@ export function WatchGuidePanel({
         if (!cancelled && data?.text) {
           setSummary(data.text);
           setReply("");
+          setLastSentUserMessage("");
         }
       } catch {
         if (!cancelled) {
@@ -117,7 +120,10 @@ export function WatchGuidePanel({
       if (data?.text) {
         setReply(data.text);
       }
+      // Keep last sent text in thread; clear input so user isn’t stuck deleting manually
+      setLastSentUserMessage(trimmed);
     } finally {
+      setUserMessage("");
       setLoading(false);
     }
   }
@@ -151,14 +157,14 @@ export function WatchGuidePanel({
             {reply || "Standing by for any thoughts you might want to explore."}
           </span>
         </div>
-        {userMessage && (
+        {lastSentUserMessage && (
           <div
             className={`${bubbleClass} self-end text-right`}
             style={{ marginLeft: "auto" }}
           >
             <span className={labelClass}>You</span>
             <span className="mt-1 block break-words text-zinc-800 [overflow-wrap:anywhere] dark:text-zinc-100">
-              {userMessage}
+              {lastSentUserMessage}
             </span>
           </div>
         )}
