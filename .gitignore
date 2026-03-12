@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# identity flat-file DB (tokens + names — keep local)
+/data/innernet-users.json
+/data/innernet-users.json.tmp

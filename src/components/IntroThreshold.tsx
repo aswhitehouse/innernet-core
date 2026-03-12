@@ -8,6 +8,10 @@ export type IntroMode = "explore" | "drift";
 
 interface IntroThresholdProps {
   onSelect: (mode: IntroMode) => void;
+  /** When set, headline becomes welcome + where to go */
+  welcomeName?: string | null;
+  /** Short line about last session e.g. "Last time: Explore — video" */
+  lastSessionSummary?: string | null;
 }
 
 /**
@@ -15,7 +19,11 @@ interface IntroThresholdProps {
  * Click Explore → left expands, right fades → load Explore UI.
  * Click Drift → right expands, left fades → load Drift UI.
  */
-export function IntroThreshold({ onSelect }: IntroThresholdProps) {
+export function IntroThreshold({
+  onSelect,
+  welcomeName,
+  lastSessionSummary,
+}: IntroThresholdProps) {
   const [hover, setHover] = useState<"explore" | "drift" | null>(null);
   const [exiting, setExiting] = useState<IntroMode | null>(null);
 
@@ -40,13 +48,16 @@ export function IntroThreshold({ onSelect }: IntroThresholdProps) {
       {/* Top: centered headline — only when not exiting */}
       {!exiting && (
         <div
-          className="pointer-events-none absolute left-0 right-0 top-12 z-10 flex flex-col items-center gap-1 text-center"
-          style={{ color: "var(--theme-text-tone)" }}
+          className="pointer-events-none absolute left-0 right-0 top-12 z-10 flex flex-col items-center gap-1 px-4 text-center text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
         >
           <p className="font-display text-lg font-medium tracking-tight opacity-95 sm:text-xl">
-            How do you want to move today?
+            {welcomeName
+              ? `Welcome, ${welcomeName}, where should we go today?`
+              : "How do you want to move today?"}
           </p>
-          <p className="text-xs font-light opacity-60">Innernet adapts to your pace.</p>
+          <p className="text-xs font-light text-white/80">
+            {lastSessionSummary || "Innernet adapts to your pace."}
+          </p>
         </div>
       )}
 

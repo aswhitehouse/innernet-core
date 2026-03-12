@@ -14,7 +14,9 @@ import { WatchGuidePanel } from "./WatchGuidePanel";
 
 type Phase = "idle" | "loading" | "interlude" | "framing" | "branching" | "playing" | "morphing";
 
-const PORTAL_PLACEHOLDER = "Render a new direction";
+/** Anchored (non-idle) compact field; idle uses searchBox label + styling in IntentInput */
+const PORTAL_PLACEHOLDER = "Search…";
+const PORTAL_IDLE_SUBTITLE = "Press Enter or Search to find videos.";
 const FORMING_HERO_MS = 600;
 const FORMING_REFLECTION_MS = 1100;
 const FORMING_BRANCH_MS = 1500;
@@ -99,7 +101,10 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
 
   const handleSubmitIntent = useCallback(async () => {
     const text = intentText.trim();
-    if (!text) return;
+    if (!text) {
+      setSearchError("Type something to search, then press Enter or Search Videos.");
+      return;
+    }
 
     setSearchError(null);
     setPhase("loading");
@@ -126,8 +131,9 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
       setReflectionRevealed(false);
       setBranchRevealed(false);
       setPhase("interlude");
-    } catch {
-      setSearchError("Search failed");
+    } catch (err) {
+      console.error("[SovereignWatchPortal] search failed", err);
+      setSearchError("Search failed — check connection and YouTube API key.");
       setPhase("idle");
     }
   }, [intentText, fetchSearch]);
@@ -242,18 +248,43 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
           isIdle ? "flex-1 justify-center py-12" : "pt-3 pb-2 sm:pt-4"
         }`}
       >
-        <IntentInput
-          variant={isIdle ? "idle" : "anchored"}
-          value={intentText}
-          onChange={setIntentText}
-          onSubmit={handleSubmitIntent}
-          disabled={phase === "loading"}
-          interpreting={phase === "loading"}
-          compactPill={isMobileSurface && !isIdle}
-          placeholder={PORTAL_PLACEHOLDER}
-        />
+        <div
+          className={
+            isIdle
+              ? "flex w-full max-w-xl flex-col items-stretch"
+              : "flex w-full flex-col items-center"
+          }
+        >
+          <IntentInput
+            variant={isIdle ? "idle" : "anchored"}
+            value={intentText}
+            onChange={(v) => {
+              setIntentText(v);
+              if (searchError) setSearchError(null);
+            }}
+            onSubmit={handleSubmitIntent}
+            disabled={phase === "loading"}
+            interpreting={phase === "loading"}
+            compactPill={isMobileSurface && !isIdle}
+            placeholder={PORTAL_PLACEHOLDER}
+            idleSubtitle={PORTAL_IDLE_SUBTITLE}
+            searchBox={isIdle}
+          />
+          {isIdle && (
+            <button
+              type="button"
+              onClick={() => handleSubmitIntent()}
+              className="mt-3 w-full rounded-xl bg-black px-4 py-3 text-sm font-semibold text-white transition hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+            >
+              Search Videos
+            </button>
+          )}
+        </div>
         {searchError && (
-          <p className="mt-2 text-center text-xs text-red-300/90">
+          <p
+            className="mt-2 max-w-md text-center text-xs text-red-600 dark:text-red-300/90"
+            role="alert"
+          >
             {searchError}
           </p>
         )}
@@ -459,7 +490,8 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
           />
           {isMobileSurface ? (
             <div className="relative z-10 flex flex-1 flex-col px-4 pb-8 pt-2 sm:px-4 sm:pb-12 sm:pt-4">
-              <div className="mx-0 overflow-hidden rounded-2xl bg-black/40 shadow-2xl">
+              {/* Light card so guide panel below player isn’t grey-on-grey on mobile */}
+              <div className="mx-0 overflow-hidden rounded-2xl border border-black/8 bg-white shadow-xl dark:border-white/10 dark:bg-zinc-900">
                 {/* Top: YouTube player in 16:9, like the native app */}
                 <PortalPlayer
                   youtubeId={playingVideo.youtubeId}
