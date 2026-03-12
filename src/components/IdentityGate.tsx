@@ -75,8 +75,11 @@ export function IdentityGate({ onIdentified }: IdentityGateProps) {
   }, [token, onIdentified]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#f5f6f8] px-4 py-12 dark:bg-[#050608]">
-      <div className="w-full max-w-md rounded-2xl border border-black/8 bg-white p-6 shadow-lg dark:border-white/10 dark:bg-zinc-900">
+    <div
+      className="flex min-h-dvh w-full max-w-[100%] flex-col items-center justify-center overflow-x-hidden bg-[#f5f6f8] py-12 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] dark:bg-[#050608]"
+      style={{ paddingBottom: "max(3rem, env(safe-area-inset-bottom))" }}
+    >
+      <div className="w-full min-w-0 max-w-md rounded-2xl border border-black/8 bg-white p-6 shadow-lg dark:border-white/10 dark:bg-zinc-900">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45 dark:text-white/45">
           Innernet
         </p>

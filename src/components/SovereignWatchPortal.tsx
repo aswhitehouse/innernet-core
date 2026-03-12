@@ -274,8 +274,8 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
     <div className="relative flex min-h-0 flex-1 flex-col">
       {/* Prompt bar at top */}
       <div
-        className={`flex shrink-0 flex-col items-center px-4 ${
-          isIdle ? "flex-1 justify-center py-12" : "pt-3 pb-2 sm:pt-4"
+        className={`flex w-full min-w-0 max-w-[100%] shrink-0 flex-col items-center px-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] ${
+          isIdle ? "flex-1 justify-center py-12" : "pt-3 pb-2 sm:px-4 sm:pt-4"
         }`}
       >
         <div
@@ -533,7 +533,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
             aria-hidden
           />
           {isMobileSurface ? (
-            <div className="relative z-10 flex flex-1 flex-col px-4 pb-8 pt-2 sm:px-4 sm:pb-12 sm:pt-4">
+            <div className="relative z-10 flex w-full min-w-0 max-w-[100%] flex-1 flex-col px-[max(1rem,env(safe-area-inset-left))] pb-8 pt-2 pr-[max(1rem,env(safe-area-inset-right))] sm:px-4 sm:pb-12 sm:pt-4">
               {/* Light card so guide panel below player isn’t grey-on-grey on mobile */}
               <div className="mx-0 min-w-0 overflow-x-hidden rounded-2xl border border-black/8 bg-white shadow-xl dark:border-white/10 dark:bg-zinc-900">
                 {/* Top: YouTube player in 16:9, like the native app */}

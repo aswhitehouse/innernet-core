@@ -69,10 +69,32 @@
   }
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  overflow-x: hidden;
+  max-width: 100%;
+  /* Prevent horizontal bleed on notched devices */
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* Use on full-bleed fixed layers so text stays inside safe area */
+.safe-area-x {
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+}
+
+/* Box that must never exceed viewport (avoids 100vw scrollbar overflow) */
+.clip-viewport {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .font-display {

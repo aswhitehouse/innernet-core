@@ -59,7 +59,7 @@ function HomeContent({
   // Single source (video only): full-width explore — no sidebar, portal + input immediately
   if (watchOnly) {
     return (
-      <main className="relative z-10 mx-auto flex w-full min-w-0 max-w-5xl flex-1 flex-col px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
+      <main className="relative z-10 mx-auto flex w-full min-w-0 max-w-5xl flex-1 flex-col px-[max(1rem,env(safe-area-inset-left))] pb-10 pt-6 pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 sm:pt-8">
         <CentralPane
           activeTrack={activeTrack}
           watchHasBeenOpened
@@ -251,7 +251,7 @@ export default function Home() {
   // Wait for cookie check before showing gate (avoids flash)
   if (!identityBooted && !identity) {
     return (
-      <div className="flex min-h-screen flex-col bg-[#f5f6f8] text-black dark:bg-[#050608] dark:text-white">
+      <div className="flex min-h-dvh w-full min-w-0 max-w-[100%] flex-col bg-[#f5f6f8] text-black dark:bg-[#050608] dark:text-white">
         <div className="flex flex-1 items-center justify-center">
           <div className="h-8 w-8 animate-pulse rounded-full bg-black/10 dark:bg-white/10" />
         </div>
@@ -289,7 +289,7 @@ export default function Home() {
 
   if (!hasCheckedStorage || mode === null) {
     return (
-      <div className="flex min-h-screen flex-col bg-[#f5f6f8] text-black dark:bg-[#050608] dark:text-white">
+      <div className="flex min-h-dvh w-full min-w-0 max-w-[100%] flex-col bg-[#f5f6f8] text-black dark:bg-[#050608] dark:text-white">
         <div className="flex flex-1 items-center justify-center">
           <div className="h-8 w-8 animate-pulse rounded-full bg-black/10 dark:bg-white/10" />
         </div>
@@ -315,9 +315,9 @@ export default function Home() {
 
   if (mode === "drift") {
     return (
-      <div className="flex min-h-screen flex-col bg-[#f5f6f8] text-black dark:bg-[#050608] dark:text-white">
-        <header className="relative z-10 border-b border-black/5 bg-white/80 px-4 py-4 backdrop-blur-xl dark:border-white/5 dark:bg-black/60 sm:px-6">
-          <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+      <div className="flex min-h-dvh w-full min-w-0 max-w-[100%] flex-col bg-[#f5f6f8] text-black dark:bg-[#050608] dark:text-white">
+        <header className="safe-area-x relative z-10 border-b border-black/5 bg-white/80 py-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] backdrop-blur-xl dark:border-white/5 dark:bg-black/60 sm:px-6">
+          <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div className="min-w-0 flex-1 pr-0 sm:pr-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40 dark:text-white/40">
                 Innernet
@@ -378,9 +378,9 @@ export default function Home() {
 
   // Explore (video only) — full-width, input visible on load
   return (
-    <div className="flex min-h-screen flex-col bg-[#f5f6f8] text-black dark:bg-[#050608] dark:text-white">
-      <header className="relative z-10 border-b border-black/5 bg-white/80 px-4 py-4 backdrop-blur-xl dark:border-white/5 dark:bg-black/60 sm:px-6">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+    <div className="flex min-h-dvh w-full min-w-0 max-w-[100%] flex-col bg-[#f5f6f8] text-black dark:bg-[#050608] dark:text-white">
+      <header className="safe-area-x relative z-10 border-b border-black/5 bg-white/80 py-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] backdrop-blur-xl dark:border-white/5 dark:bg-black/60 sm:px-6">
+        <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="min-w-0 flex-1 pr-0 sm:pr-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40 dark:text-white/40">
               Innernet
