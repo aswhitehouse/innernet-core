@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 interface WatchGuidePanelProps {
   reflection: string;
   currentTopic: string;
+  /** Actual video title — guide copy is anchored to this + search */
+  videoTitle?: string;
   stayingInZone: boolean;
   onStayInZone: () => void;
   onBranchOutward: () => void;
@@ -18,6 +20,7 @@ interface WatchGuidePanelProps {
 export function WatchGuidePanel({
   reflection,
   currentTopic,
+  videoTitle,
   stayingInZone,
   onStayInZone,
   onBranchOutward,
@@ -69,7 +72,11 @@ export function WatchGuidePanel({
         const res = await fetch("/api/watch-guide", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ topic: currentTopic, reflection }),
+          body: JSON.stringify({
+            topic: currentTopic,
+            reflection,
+            videoTitle: videoTitle || undefined,
+          }),
         });
         const data = await res.json();
         if (!cancelled && data?.text) {
@@ -88,7 +95,7 @@ export function WatchGuidePanel({
     return () => {
       cancelled = true;
     };
-  }, [currentTopic, reflection]);
+  }, [currentTopic, reflection, videoTitle]);
 
   async function handleAsk(e: React.FormEvent) {
     e.preventDefault();
@@ -103,6 +110,7 @@ export function WatchGuidePanel({
           topic: currentTopic,
           reflection: summary || reflection,
           userMessage: trimmed,
+          videoTitle: videoTitle || undefined,
         }),
       });
       const data = await res.json();

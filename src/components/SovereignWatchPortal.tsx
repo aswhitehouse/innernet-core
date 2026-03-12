@@ -534,6 +534,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
                   layout="card"
                   reflection={reflection}
                   currentTopic={currentTopic}
+                  videoTitle={playingVideo.title}
                   stayingInZone={stayingInZone}
                   onStayInZone={handleStayInZone}
                   onBranchOutward={handleBranchOutward}
@@ -554,6 +555,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
                 layout="standalone"
                 reflection={reflection}
                 currentTopic={currentTopic}
+                videoTitle={playingVideo.title}
                 stayingInZone={stayingInZone}
                 onStayInZone={handleStayInZone}
                 onBranchOutward={handleBranchOutward}

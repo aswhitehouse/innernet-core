@@ -12,65 +12,84 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => null) as
-    | { topic?: string; reflection?: string; userMessage?: string }
+    | {
+        topic?: string;
+        reflection?: string;
+        userMessage?: string;
+        /** Actual video title from YouTube — anchor guide copy to this */
+        videoTitle?: string;
+      }
     | null;
 
   if (!body) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { topic, reflection, userMessage } = body;
+  const { topic, reflection, userMessage, videoTitle } = body;
   const safeTopic = (topic || "").trim();
   const safeReflection = (reflection || "").trim();
+  const safeVideoTitle = (videoTitle || "").trim();
 
-  if (!safeTopic && !userMessage) {
+  if (!safeTopic && !userMessage?.trim() && !safeVideoTitle) {
     return NextResponse.json(
-      { error: "Missing topic or userMessage" },
+      { error: "Missing topic, videoTitle, or userMessage" },
       { status: 400 }
     );
   }
 
   const system = `
-You are a calm, reflective guide sitting beside the user while they watch a YouTube video inside a contemplative environment called Innernet.
+You are a calm, reflective guide beside the user while they watch a video in Innernet.
 
-Tone:
-- Soft, measured, non-performative.
-- You never shout, never hype, never sound like clickbait.
-- You speak in short, grounded paragraphs (1–3 sentences).
+Tone: soft, measured, non-performative; short grounded sentences (1–3). No hype, no clickbait.
 
-Your job:
-- Frame what the video is exploring at a conceptual level.
-- Help the user notice patterns, themes, and what is essential.
-- Never mention algorithms, feeds, or YouTube itself unless directly asked.
-- You can refer to "this video" or "what you're watching" instead.
+Critical — avoid generic openers:
+- Do NOT start with "This video explores…", "As you watch…", "Consider how…", or similar template filler.
+- Do NOT speak in vague abstractions detached from what they actually searched and what the video is titled.
+
+Instead:
+- Tie your words to the user's search query and the video's actual title when provided.
+- Say something specific: what they were looking for + what this particular title suggests is in frame.
+- If the title is literal (e.g. a person, place, how-to), reflect that directly.
+- Help them notice one concrete angle to watch for — not a lecture.
+
+Never mention algorithms or feeds. Say "what you're watching" or refer by substance, not platform.
 `;
 
   const messages: Array<{ role: "system" | "user"; content: string }> = [
     { role: "system", content: system },
   ];
 
-  if (safeTopic || safeReflection) {
+  if (safeTopic || safeReflection || safeVideoTitle) {
+    const titleLine = safeVideoTitle
+      ? `Video title (use this — be specific): "${safeVideoTitle}"`
+      : "Video title: (not provided — infer only from search below)";
     messages.push({
       role: "user",
-      content: `The user is exploring: "${safeTopic || "(no explicit topic)"}".
+      content: `User's search / what they asked for: "${safeTopic || "(none)"}".
 
-Reflection shown on screen:
-"${safeReflection || "(none yet)"}"
+${titleLine}
 
-Give me a short guide summary (2 sentences max) that:
-- Names what is being explored.
-- Suggests how to watch this with more intention.
+On-screen reflection line (context only, do not repeat verbatim):
+"${safeReflection || "(none)"}"
 
-Do not ask questions. Do not mention YouTube or algorithms.`,
+Write 2 short sentences max:
+1) Acknowledge their search and what this specific video title suggests they're about to see.
+2) One concrete suggestion for what to notice — no generic "explore themes" filler.
+
+Forbidden openings: "This video explores", "As you watch", "Consider how", "Reflect on".
+Start with substance tied to title or search.`,
     });
   }
 
   if (userMessage && userMessage.trim()) {
+    const contextLine = safeVideoTitle
+      ? `They're still watching: "${safeVideoTitle}" (search: "${safeTopic || "n/a"}").`
+      : "";
     messages.push({
       role: "user",
-      content: `The user says: "${userMessage.trim()}". Respond briefly (1–2 sentences) in the same calm, reflective tone.
-
-Do not restate the original summary in full; gently extend or clarify it.`,
+      content: `${contextLine}
+The user says: "${userMessage.trim()}".
+Reply in 1–2 sentences — specific, calm. No generic "this video" filler.`,
     });
   }
 
