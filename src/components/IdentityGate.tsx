@@ -31,6 +31,7 @@ export function IdentityGate({ onIdentified }: IdentityGateProps) {
       const res = await fetch("/api/identity/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ name: name.trim() }),
       });
       const data = await res.json();

@@ -59,7 +59,7 @@ function HomeContent({
   // Single source (video only): full-width explore — no sidebar, portal + input immediately
   if (watchOnly) {
     return (
-      <main className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
+      <main className="relative z-10 mx-auto flex w-full min-w-0 max-w-5xl flex-1 flex-col px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
         <CentralPane
           activeTrack={activeTrack}
           watchHasBeenOpened
@@ -132,12 +132,58 @@ function HomeContent({
 export default function Home() {
   const router = useRouter();
   const [identity, setIdentity] = useState<IdentityPayload | null>(null);
+  /** false until we've tried cookie session once */
+  const [identityBooted, setIdentityBooted] = useState(false);
   const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
   const [mode, setMode] = useState<"intro" | "explore" | "drift" | null>(null);
   const [enabledTracks, setEnabledTracks] = useState<TrackId[]>([]);
   const [activeTrack, setActiveTrack] = useState<TrackId | null>(null);
 
+  // Restore session from httpOnly cookie so reload doesn't force token re-entry
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/identity/me", { credentials: "include" });
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled && res.ok && data?.ok && data?.name) {
+          setIdentity({
+            name: data.name,
+            lastSession: data.lastSession ?? null,
+          });
+          if (typeof window !== "undefined") {
+            const stored = window.localStorage.getItem(STORAGE_KEY) as
+              | "explore"
+              | "drift"
+              | null;
+            if (stored === "explore" || stored === "drift") {
+              setMode(stored);
+              if (stored === "explore") {
+                setEnabledTracks(["watch"]);
+                setActiveTrack("watch");
+              }
+            } else {
+              setMode("intro");
+            }
+          } else {
+            setMode("intro");
+          }
+          setHasCheckedStorage(true);
+        }
+      } catch {
+        /* ignore */
+      } finally {
+        if (!cancelled) setIdentityBooted(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // No cookie: after boot, read localStorage only for when identity gets set later
+  useEffect(() => {
+    if (!identityBooted || identity) return;
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem(STORAGE_KEY) as
       | "explore"
@@ -146,7 +192,6 @@ export default function Home() {
     if (stored === "explore" || stored === "drift") {
       setMode(stored);
       if (stored === "explore") {
-        // Video only: open explore input immediately (no second click)
         setEnabledTracks(["watch"]);
         setActiveTrack("watch");
       }
@@ -154,7 +199,7 @@ export default function Home() {
       setMode("intro");
     }
     setHasCheckedStorage(true);
-  }, []);
+  }, [identityBooted, identity]);
 
   const handleChooseExplore = () => {
     if (typeof window !== "undefined") {
@@ -203,14 +248,39 @@ export default function Home() {
     setActiveTrack(id);
   };
 
+  // Wait for cookie check before showing gate (avoids flash)
+  if (!identityBooted && !identity) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#f5f6f8] text-black dark:bg-[#050608] dark:text-white">
+        <div className="flex flex-1 items-center justify-center">
+          <div className="h-8 w-8 animate-pulse rounded-full bg-black/10 dark:bg-white/10" />
+        </div>
+      </div>
+    );
+  }
+
   if (!identity) {
     return (
       <IdentityGate
         onIdentified={(payload) => {
           setIdentity(payload);
-          // Always land on intro after identify so "Welcome, {name}, where should we go today?" shows.
-          // Explore/Drift from localStorage resume only via the intro halves.
-          setMode("intro");
+          if (typeof window !== "undefined") {
+            const stored = window.localStorage.getItem(STORAGE_KEY) as
+              | "explore"
+              | "drift"
+              | null;
+            if (stored === "explore" || stored === "drift") {
+              setMode(stored);
+              if (stored === "explore") {
+                setEnabledTracks(["watch"]);
+                setActiveTrack("watch");
+              }
+            } else {
+              setMode("intro");
+            }
+          } else {
+            setMode("intro");
+          }
           setHasCheckedStorage(true);
         }}
       />
@@ -247,8 +317,8 @@ export default function Home() {
     return (
       <div className="flex min-h-screen flex-col bg-[#f5f6f8] text-black dark:bg-[#050608] dark:text-white">
         <header className="relative z-10 border-b border-black/5 bg-white/80 px-4 py-4 backdrop-blur-xl dark:border-white/5 dark:bg-black/60 sm:px-6">
-          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-            <div>
+          <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div className="min-w-0 flex-1 pr-0 sm:pr-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40 dark:text-white/40">
                 Innernet
               </p>
@@ -256,12 +326,12 @@ export default function Home() {
                 Drift
               </h1>
               {identity && (
-                <p className="mt-1 text-sm font-medium text-black/80 dark:text-white/90">
+                <p className="mt-1 break-words text-sm font-medium leading-snug text-black/80 dark:text-white/90">
                   Welcome, {identity.name}
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => {
@@ -310,8 +380,8 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f6f8] text-black dark:bg-[#050608] dark:text-white">
       <header className="relative z-10 border-b border-black/5 bg-white/80 px-4 py-4 backdrop-blur-xl dark:border-white/5 dark:bg-black/60 sm:px-6">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-          <div>
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div className="min-w-0 flex-1 pr-0 sm:pr-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40 dark:text-white/40">
               Innernet
             </p>
@@ -319,7 +389,7 @@ export default function Home() {
               Explore
             </h1>
             {identity && (
-              <p className="mt-1 text-sm font-medium text-black/80 dark:text-white/90">
+              <p className="mt-1 break-words text-sm font-medium leading-snug text-black/80 dark:text-white/90">
                 Welcome, {identity.name}, where should we go today?
               </p>
             )}
@@ -327,7 +397,7 @@ export default function Home() {
               Search videos below
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => {

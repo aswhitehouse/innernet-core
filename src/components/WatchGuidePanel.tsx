@@ -9,6 +9,8 @@ interface WatchGuidePanelProps {
   onStayInZone: () => void;
   onBranchOutward: () => void;
   onZoomOut: () => void;
+  /** Clear current search and return to fresh search (wrong typo / wrong results) */
+  onNewSearch?: () => void;
   /** Layout: 'card' for mobile joined under player, 'standalone' for desktop stack */
   layout?: "card" | "standalone";
 }
@@ -20,6 +22,7 @@ export function WatchGuidePanel({
   onStayInZone,
   onBranchOutward,
   onZoomOut,
+  onNewSearch,
   layout = "standalone",
 }: WatchGuidePanelProps) {
   const isCard = layout === "card";
@@ -34,12 +37,12 @@ export function WatchGuidePanel({
     : "text-[10px] font-medium uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400";
 
   const bodyClass = isCard
-    ? "text-sm font-normal leading-relaxed text-zinc-800 dark:text-zinc-100"
-    : "text-xs font-light leading-relaxed text-zinc-800 dark:text-zinc-100";
+    ? "break-words text-sm font-normal leading-relaxed text-zinc-800 [overflow-wrap:anywhere] dark:text-zinc-100"
+    : "break-words text-xs font-light leading-relaxed text-zinc-800 [overflow-wrap:anywhere] dark:text-zinc-100";
 
   const bubbleClass = isCard
-    ? "inline-flex max-w-full flex-col rounded-xl border border-zinc-200 bg-white px-3 py-2.5 shadow-sm dark:border-zinc-600 dark:bg-zinc-900"
-    : "inline-flex max-w-full flex-col rounded-2xl border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-600 dark:bg-zinc-900";
+    ? "inline-flex w-full max-w-full min-w-0 flex-col rounded-xl border border-zinc-200 bg-white px-3 py-2.5 shadow-sm dark:border-zinc-600 dark:bg-zinc-900"
+    : "inline-flex w-full max-w-full min-w-0 flex-col rounded-2xl border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-600 dark:bg-zinc-900";
 
   const inputClass = isCard
     ? "flex-1 rounded-full border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 shadow-inner focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:ring-white/10"
@@ -112,11 +115,22 @@ export function WatchGuidePanel({
 
   return (
     <div className={baseClasses}>
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className={labelClass}>Guide</p>
-        <button type="button" onClick={onZoomOut} className={btnSecondary}>
-          Zoom Out
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {onNewSearch && (
+            <button
+              type="button"
+              onClick={onNewSearch}
+              className={btnSecondary}
+            >
+              New search
+            </button>
+          )}
+          <button type="button" onClick={onZoomOut} className={btnSecondary}>
+            Zoom Out
+          </button>
+        </div>
       </div>
 
       <p className={bodyClass}>{summary || reflection}</p>
@@ -124,7 +138,7 @@ export function WatchGuidePanel({
       <div className="mt-1 space-y-2 text-sm leading-relaxed">
         <div className={bubbleClass}>
           <span className={labelClass}>Guide</span>
-          <span className="mt-1 block text-zinc-800 dark:text-zinc-100">
+          <span className="mt-1 block break-words text-zinc-800 [overflow-wrap:anywhere] dark:text-zinc-100">
             {reply || "Standing by for any thoughts you might want to explore."}
           </span>
         </div>
@@ -134,7 +148,7 @@ export function WatchGuidePanel({
             style={{ marginLeft: "auto" }}
           >
             <span className={labelClass}>You</span>
-            <span className="mt-1 block text-zinc-800 dark:text-zinc-100">
+            <span className="mt-1 block break-words text-zinc-800 [overflow-wrap:anywhere] dark:text-zinc-100">
               {userMessage}
             </span>
           </div>

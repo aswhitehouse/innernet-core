@@ -240,6 +240,36 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
     setPhase(phaseBeforePlay);
   }, [phaseBeforePlay]);
 
+  /** Bail out of wrong search / typo — back to idle with empty field for a fresh query */
+  const handleResetToFreshSearch = useCallback(() => {
+    formingTimers.current.forEach(clearTimeout);
+    formingTimers.current = [];
+    morphTimers.current.forEach(clearTimeout);
+    morphTimers.current = [];
+    setPhase("idle");
+    setPlayingVideo(null);
+    setHero(null);
+    setAllVideos([]);
+    setBranches([]);
+    setReflectionStack([]);
+    setReflection("");
+    setCurrentTopic("");
+    setIntentText("");
+    setSearchError(null);
+    setFlowForming(false);
+    setMorphStep(null);
+    setInterludeMode(null);
+    setPendingBranch(null);
+    setPendingBranchForMorph(null);
+    setStayingInZone(false);
+    setBranchLoading(false);
+    setHeroRevealed(false);
+    setReflectionRevealed(false);
+    setBranchRevealed(false);
+    setInterludePrimary("");
+    setInterludeSecondary("");
+  }, []);
+
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       {/* Prompt bar at top */}
@@ -252,9 +282,23 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
           className={
             isIdle
               ? "flex w-full max-w-xl flex-col items-stretch"
-              : "flex w-full flex-col items-center"
+              : "flex w-full max-w-2xl flex-col items-center gap-2"
           }
         >
+          {!isIdle && phase !== "loading" && (
+            <div className="flex w-full flex-wrap items-center justify-center gap-2 px-1">
+              <button
+                type="button"
+                onClick={handleResetToFreshSearch}
+                className="rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+              >
+                New search
+              </button>
+              <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                Wrong results? Start over with a new query.
+              </span>
+            </div>
+          )}
           <IntentInput
             variant={isIdle ? "idle" : "anchored"}
             value={intentText}
@@ -491,7 +535,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
           {isMobileSurface ? (
             <div className="relative z-10 flex flex-1 flex-col px-4 pb-8 pt-2 sm:px-4 sm:pb-12 sm:pt-4">
               {/* Light card so guide panel below player isn’t grey-on-grey on mobile */}
-              <div className="mx-0 overflow-hidden rounded-2xl border border-black/8 bg-white shadow-xl dark:border-white/10 dark:bg-zinc-900">
+              <div className="mx-0 min-w-0 overflow-x-hidden rounded-2xl border border-black/8 bg-white shadow-xl dark:border-white/10 dark:bg-zinc-900">
                 {/* Top: YouTube player in 16:9, like the native app */}
                 <PortalPlayer
                   youtubeId={playingVideo.youtubeId}
@@ -508,6 +552,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
                   onStayInZone={handleStayInZone}
                   onBranchOutward={handleBranchOutward}
                   onZoomOut={handleExitPlayer}
+                  onNewSearch={handleResetToFreshSearch}
                 />
               </div>
             </div>
@@ -527,6 +572,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
                 onStayInZone={handleStayInZone}
                 onBranchOutward={handleBranchOutward}
                 onZoomOut={handleExitPlayer}
+                onNewSearch={handleResetToFreshSearch}
               />
             </div>
           )}

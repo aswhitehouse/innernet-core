@@ -26,8 +26,10 @@ export function CentralPane({ activeTrack, onCloseTrack, watchHasBeenOpened = fa
 
   return (
     <div
-      className={`overflow-hidden rounded-2xl shadow-sm backdrop-blur-sm transition-all duration-500 ease-out ${
-        isWatchActive ? "min-h-[480px] border-0 bg-transparent" : "min-h-[320px] border border-black/[0.06] bg-white/50"
+      className={`rounded-2xl shadow-sm backdrop-blur-sm transition-all duration-500 ease-out ${
+        isWatchActive
+          ? "min-h-[480px] overflow-x-hidden border-0 bg-transparent"
+          : "min-h-[320px] overflow-hidden border border-black/[0.06] bg-white/50"
       }`}
     >
       {/* Watch portal: keep mounted when opened so state (and playback) is preserved when zoomed out */}
