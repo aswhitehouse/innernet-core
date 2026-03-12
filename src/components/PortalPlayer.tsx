@@ -12,6 +12,8 @@ import {
 const BLACK_MS = 200;
 const FADE_UP_MS = 350;
 const PROGRESS_POLL_MS = 250;
+/** Hide pause/timeline/volume after idle; tap overlay to show again (non-iOS only — iframe eats taps on iOS) */
+const CONTROLS_AUTO_HIDE_MS = 3200;
 
 interface PortalPlayerProps {
   youtubeId: string;
@@ -39,6 +41,7 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
   const [videoEnded, setVideoEnded] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const controlsHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPlayingRef = useRef(false);
   const durationRef = useRef(0);
   isPlayingRef.current = isPlaying;
@@ -188,6 +191,42 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
 
   const progressFrac = duration > 0 ? Math.min(1, currentTime / duration) : 0;
 
+  /** Chrome visible; on iOS keep always true so user isn’t stuck without tap target */
+  const [controlsVisible, setControlsVisible] = useState(true);
+
+  const clearControlsHideTimer = useCallback(() => {
+    if (controlsHideTimerRef.current) {
+      clearTimeout(controlsHideTimerRef.current);
+      controlsHideTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleControlsHide = useCallback(() => {
+    if (isIOS || videoEnded) return;
+    clearControlsHideTimer();
+    controlsHideTimerRef.current = setTimeout(() => {
+      setControlsVisible(false);
+      controlsHideTimerRef.current = null;
+    }, CONTROLS_AUTO_HIDE_MS);
+  }, [isIOS, videoEnded, clearControlsHideTimer]);
+
+  const showControls = useCallback(() => {
+    setControlsVisible(true);
+    scheduleControlsHide();
+  }, [scheduleControlsHide]);
+
+  // When playback starts, show chrome briefly then auto-hide (desktop)
+  useEffect(() => {
+    if (viewPhase !== "playing" || videoEnded) {
+      setControlsVisible(true);
+      clearControlsHideTimer();
+      return;
+    }
+    if (isIOS) return;
+    scheduleControlsHide();
+    return clearControlsHideTimer;
+  }, [viewPhase, videoEnded, isIOS, scheduleControlsHide, clearControlsHideTimer]);
+
   return (
     <div
       ref={containerRef}
@@ -240,6 +279,15 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
               aria-hidden
             />
           )}
+          {/* Tap to show controls when hidden; pointer-events only while hidden so sliders work when visible */}
+          {viewPhase === "playing" && !videoEnded && !isIOS && !controlsVisible && (
+            <button
+              type="button"
+              aria-label="Show player controls"
+              className="absolute inset-0 z-[25] cursor-pointer rounded-2xl bg-transparent"
+              onClick={() => showControls()}
+            />
+          )}
           {viewPhase === "loading" && (
             <div
               className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/90 player-loading-shimmer"
@@ -282,15 +330,21 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
 
       {viewPhase === "playing" && (
         <div
-          className="absolute bottom-0 left-0 right-0 z-10 flex flex-col gap-2 rounded-b-2xl p-3"
+          className={`absolute bottom-0 left-0 right-0 z-10 flex flex-col gap-2 rounded-b-2xl p-3 transition-opacity duration-300 ease-out ${
+            controlsVisible ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
           style={{
             background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.4) 60%, transparent)",
           }}
+          onPointerDown={() => !isIOS && showControls()}
         >
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={togglePlay}
+              onClick={() => {
+                togglePlay();
+                showControls();
+              }}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25"
               aria-label={isPlaying ? "Pause" : "Play"}
             >
@@ -310,7 +364,11 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
                 max={1}
                 step={0.001}
                 value={progressFrac}
-                onChange={(e) => seek(parseFloat(e.target.value))}
+                onChange={(e) => {
+                  seek(parseFloat(e.target.value));
+                  showControls();
+                }}
+                onPointerDown={() => showControls()}
                 className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/25 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
               />
             </div>
@@ -325,7 +383,11 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
                 min={0}
                 max={100}
                 value={volume}
-                onChange={(e) => setVolumeLevel(parseInt(e.target.value, 10))}
+                onChange={(e) => {
+                  setVolumeLevel(parseInt(e.target.value, 10));
+                  showControls();
+                }}
+                onPointerDown={() => showControls()}
                 className="h-1 w-20 cursor-pointer appearance-none rounded-full bg-white/25 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
                 aria-label="Volume"
               />
@@ -333,7 +395,10 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
             {!isIOS && (
               <button
                 type="button"
-                onClick={toggleFullscreen}
+                onClick={() => {
+                  toggleFullscreen();
+                  showControls();
+                }}
                 className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/20"
                 aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
               >

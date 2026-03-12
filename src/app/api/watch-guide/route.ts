@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
         topic?: string;
         reflection?: string;
         userMessage?: string;
-        /** Actual video title from YouTube — anchor guide copy to this */
         videoTitle?: string;
       }
     | null;
@@ -38,21 +37,20 @@ export async function POST(req: NextRequest) {
   }
 
   const system = `
-You are a calm, reflective guide beside the user while they watch a video in Innernet.
+You are a helpful chat companion while the user watches a video in an app called Innernet.
 
-Tone: soft, measured, non-performative; short grounded sentences (1–3). No hype, no clickbait.
+Initial summary (when no user message yet):
+- Matter-of-fact and plain. Say what the video is likely about based on its title and what they searched — like a short TV guide blurb, not a mindfulness script.
+- No "journey", "essence", "hold space", "notice how", "evokes", "themes", or similar new-age or therapy-speak.
+- 1–2 short sentences. Direct. You can say "This one’s about…" or "Looks like…" — normal language.
 
-Critical — avoid generic openers:
-- Do NOT start with "This video explores…", "As you watch…", "Consider how…", or similar template filler.
-- Do NOT speak in vague abstractions detached from what they actually searched and what the video is titled.
+When the user sends a message:
+- Answer like a normal chat: genuinely respond to what they asked — facts, opinions, jokes, tangents, whatever fits.
+- You don’t have to tie every reply back to "the video" or "intention". If they ask something off-topic, answer normally.
+- Keep replies concise (1–4 sentences) unless they ask for more.
+- Still avoid shouting, clickbait, or mentioning algorithms/feeds unless they ask.
 
-Instead:
-- Tie your words to the user's search query and the video's actual title when provided.
-- Say something specific: what they were looking for + what this particular title suggests is in frame.
-- If the title is literal (e.g. a person, place, how-to), reflect that directly.
-- Help them notice one concrete angle to watch for — not a lecture.
-
-Never mention algorithms or feeds. Say "what you're watching" or refer by substance, not platform.
+Never mention YouTube by name unless they ask.
 `;
 
   const messages: Array<{ role: "system" | "user"; content: string }> = [
@@ -61,35 +59,32 @@ Never mention algorithms or feeds. Say "what you're watching" or refer by substa
 
   if (safeTopic || safeReflection || safeVideoTitle) {
     const titleLine = safeVideoTitle
-      ? `Video title (use this — be specific): "${safeVideoTitle}"`
-      : "Video title: (not provided — infer only from search below)";
+      ? `Video title: "${safeVideoTitle}"`
+      : "Video title unknown.";
     messages.push({
       role: "user",
-      content: `User's search / what they asked for: "${safeTopic || "(none)"}".
+      content: `They searched for: "${safeTopic || "(nothing specific)"}".
 
 ${titleLine}
 
-On-screen reflection line (context only, do not repeat verbatim):
+(Optional context from the app — don’t quote it; use only if helpful.)
 "${safeReflection || "(none)"}"
 
-Write 2 short sentences max:
-1) Acknowledge their search and what this specific video title suggests they're about to see.
-2) One concrete suggestion for what to notice — no generic "explore themes" filler.
-
-Forbidden openings: "This video explores", "As you watch", "Consider how", "Reflect on".
-Start with substance tied to title or search.`,
+Write a brief, plain summary (1–2 sentences): what this video probably is, based on title + search. No fluff.`,
     });
   }
 
   if (userMessage && userMessage.trim()) {
-    const contextLine = safeVideoTitle
-      ? `They're still watching: "${safeVideoTitle}" (search: "${safeTopic || "n/a"}").`
-      : "";
+    const context =
+      safeVideoTitle || safeTopic
+        ? `Context if relevant — title: "${safeVideoTitle || "n/a"}", search: "${safeTopic || "n/a"}".`
+        : "";
     messages.push({
       role: "user",
-      content: `${contextLine}
-The user says: "${userMessage.trim()}".
-Reply in 1–2 sentences — specific, calm. No generic "this video" filler.`,
+      content: `${context}
+User message: "${userMessage.trim()}"
+
+Reply naturally to what they said.`,
     });
   }
 
@@ -103,8 +98,8 @@ Reply in 1–2 sentences — specific, calm. No generic "this video" filler.`,
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages,
-        temperature: 0.6,
-        max_tokens: 220,
+        temperature: userMessage?.trim() ? 0.75 : 0.45,
+        max_tokens: 280,
       }),
     });
 
@@ -119,7 +114,7 @@ Reply in 1–2 sentences — specific, calm. No generic "this video" filler.`,
     const data = await res.json();
     const text =
       data?.choices?.[0]?.message?.content?.trim() ||
-      "I’m here beside you. Let’s watch this slowly and see what feels important.";
+      "Say what you want to know and I’ll answer.";
 
     return NextResponse.json({ text });
   } catch (error) {
@@ -129,4 +124,3 @@ Reply in 1–2 sentences — specific, calm. No generic "this video" filler.`,
     );
   }
 }
-
