@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   buildEmbedUrl,
   sendCommand,
@@ -226,14 +227,20 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
     return clearControlsHideTimer;
   }, [viewPhase, videoEnded, scheduleControlsHide, clearControlsHideTimer]);
 
-  return (
-    <div
-      ref={containerRef}
-      className={`relative overflow-hidden rounded-none bg-black shadow-2xl sm:rounded-2xl ${
-        fullViewport ? "fixed inset-0 z-50 flex flex-col rounded-none" : ""
-      }`}
-      style={{ color: "var(--theme-text-tone)" }}
-    >
+  const rootClassName = `relative overflow-hidden rounded-none bg-black shadow-2xl sm:rounded-2xl ${
+    fullViewport ? "fixed inset-0 z-[9999] flex flex-col rounded-none" : ""
+  }`;
+  const rootStyle: React.CSSProperties = fullViewport
+    ? {
+        color: "var(--theme-text-tone)",
+        height: "100dvh",
+        width: "100%",
+        minHeight: "100dvh",
+      }
+    : { color: "var(--theme-text-tone)" };
+
+  const playerContent = (
+    <div ref={containerRef} className={rootClassName} style={rootStyle}>
       {viewPhase === "toBlack" && (
         <div className="absolute inset-0 rounded-2xl bg-black aspect-video w-full" />
       )}
@@ -243,6 +250,7 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
           className={`relative w-full bg-black isolate ${
             fullViewport ? "flex-1 min-h-0" : "aspect-video"
           }`}
+          style={fullViewport ? { flex: "1 1 0", minHeight: 0 } : undefined}
         >
           {/* Blur-zoomed video backdrop to soften hard black bars, especially for letterboxed sources */}
           {thumbnailUrl && (
@@ -266,7 +274,9 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
             allowFullScreen
             className="absolute inset-0 z-10 h-full w-full rounded-2xl"
             style={{
-              opacity: viewPhase === "playing" ? 1 : 0,
+              // In fullscreen (`fullViewport`) force opacity to 1 so iOS Safari quirks
+              // around load/resize can't leave us with a blank surface.
+              opacity: viewPhase === "playing" || fullViewport ? 1 : 0,
               transition: `opacity ${FADE_UP_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
             }}
             onLoad={onIframeLoad}
@@ -410,6 +420,8 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
       )}
     </div>
   );
+
+  return playerContent;
 }
 
 function formatTime(seconds: number): string {
