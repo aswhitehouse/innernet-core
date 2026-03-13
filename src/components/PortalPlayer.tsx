@@ -392,19 +392,17 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
                 aria-label="Volume"
               />
             </div>
-            {!isIOS && (
-              <button
-                type="button"
-                onClick={() => {
-                  toggleFullscreen();
-                  showControls();
-                }}
-                className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/20"
-                aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-              >
-                {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                toggleFullscreen();
+                showControls();
+              }}
+              className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/20"
+              aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen — rotate for landscape"}
+            >
+              {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            </button>
           </div>
         </div>
       )}
