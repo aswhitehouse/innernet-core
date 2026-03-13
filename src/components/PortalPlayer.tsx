@@ -268,7 +268,10 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
           )}
           <iframe
             ref={iframeRef}
-            src={buildEmbedUrl(youtubeId, !isIOS)}
+            src={buildEmbedUrl(youtubeId, {
+              autoplay: !isIOS,
+              nativeControls: isIOS,
+            })}
             title={title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
@@ -288,8 +291,8 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
               aria-hidden
             />
           )}
-          {/* Tap anywhere to show controls when hidden (all devices including iOS) */}
-          {viewPhase === "playing" && !videoEnded && !controlsVisible && (
+          {/* Tap-to-show overlay only for our custom controls (non‑iOS). On iOS we rely on YouTube’s own UI. */}
+          {viewPhase === "playing" && !videoEnded && !controlsVisible && !isIOS && (
             <button
               type="button"
               aria-label="Show player controls"
@@ -337,7 +340,8 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
         </div>
       )}
 
-      {viewPhase === "playing" && (
+      {/* Custom chrome only on non‑iOS devices; iOS uses native YouTube controls (including fullscreen). */}
+      {viewPhase === "playing" && !isIOS && (
         <div
           className={`absolute bottom-0 left-0 right-0 z-10 flex flex-col gap-2 rounded-b-2xl p-3 transition-opacity duration-300 ease-out ${
             controlsVisible ? "opacity-100" : "pointer-events-none opacity-0"

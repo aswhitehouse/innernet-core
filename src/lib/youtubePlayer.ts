@@ -5,13 +5,18 @@
 
 const YOUTUBE_ORIGIN = "https://www.youtube.com";
 
-export function buildEmbedUrl(videoId: string, autoplay = false): string {
+export function buildEmbedUrl(
+  videoId: string,
+  opts?: { autoplay?: boolean; nativeControls?: boolean }
+): string {
+  const { autoplay = false, nativeControls = false } = opts ?? {};
   const params = new URLSearchParams();
   params.set("enablejsapi", "1");
   params.set("autoplay", autoplay ? "1" : "0");
-  params.set("controls", "0");
-  params.set("disablekb", "1");
-  params.set("fs", "0");
+  // When nativeControls is true (iOS mobile), let YouTube show its own UI + fullscreen.
+  params.set("controls", nativeControls ? "1" : "0");
+  params.set("disablekb", nativeControls ? "0" : "1");
+  params.set("fs", nativeControls ? "1" : "0");
   params.set("modestbranding", "1");
   params.set("rel", "0");
   params.set("iv_load_policy", "3");
