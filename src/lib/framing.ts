@@ -58,10 +58,10 @@ export function getPhraseFromQuery(query: string): string {
 }
 
 const REFLECTION_TEMPLATES: ((phrase: string) => string)[] = [
-  (p) => `You're exploring ${p} — how it shapes perception and practice.`,
+  (p) => `You're exploring ${p}, how it shapes perception and practice.`,
   (p) => `A look into ${p} and how it influences the way we think.`,
   (p) => `Foundations of ${p}, and how they show up in daily life.`,
-  (p) => `You're moving toward ${p} — core ideas and their reach.`,
+  (p) => `You're moving toward ${p}, core ideas and their reach.`,
   (p) => `A quiet pass through ${p} and its implications.`,
 ];
 

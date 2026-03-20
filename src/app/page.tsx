@@ -208,7 +208,7 @@ export default function Home() {
     setEnabledTracks(["watch"]);
     setActiveTrack("watch");
     setMode("explore");
-    postTrajectory("explore", "Opened Explore — video search");
+    postTrajectory("explore", "Opened Explore, video search");
   };
 
   const handleChooseDrift = () => {
