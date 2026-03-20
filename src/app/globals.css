@@ -482,8 +482,9 @@ body {
   transform: translateZ(1px);
   -webkit-transform: translateZ(1px);
   background:
-    linear-gradient(135deg, transparent 45%, rgba(0,0,0,0.85) 100%),
-    radial-gradient(ellipse 55% 55% at 50% 50%, rgba(0,0,0,0.65), transparent 70%);
+    /* Kept intentionally subtle so the blurred thumbnail backdrop can bleed through. */
+    linear-gradient(135deg, transparent 45%, rgba(0,0,0,0.18) 100%),
+    radial-gradient(ellipse 55% 55% at 50% 50%, rgba(0,0,0,0.12), transparent 70%);
 }
 .player-poster-play::after {
   content: "";

@@ -160,6 +160,8 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
       setInterludeMode(null);
     } else if (interludeMode === "branch" && pendingBranchForMorph) {
       const branch = pendingBranchForMorph;
+      const baseTopic = currentTopic.trim();
+      const nextTopic = baseTopic ? `${baseTopic} ${branch.title}`.trim() : branch.title;
       setPhase("morphing");
       setMorphStep("exit");
       setPendingBranch(branch);
@@ -168,13 +170,13 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
       setPendingBranchForMorph(null);
 
       const applyMorph = (videos: PortalVideo[]) => {
-        const nextBranches = generateBranches(videos, branch.title);
+        const nextBranches = generateBranches(videos, nextTopic);
         setReflectionStack((prev) => {
           const next = [reflection, ...prev].slice(0, MAX_BREADCRUMBS);
           return next;
         });
-        setReflection(generateIntentReflection(branch.title));
-        setCurrentTopic(branch.title);
+        setReflection(generateIntentReflection(nextTopic));
+        setCurrentTopic(nextTopic);
         setHero(branch.video);
         setAllVideos(videos);
         setBranches(nextBranches);
@@ -202,7 +204,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
       morphTimers.current.push(
         setTimeout(async () => {
           try {
-            const videos = await fetchSearch(branch.title);
+            const videos = await fetchSearch(nextTopic);
             if (videos.length > 0) applyMorph(videos);
             else applyMorph(allVideos);
           } catch {
@@ -211,7 +213,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
         }, MORPH_EXIT_MS)
       );
     }
-  }, [interludeMode, pendingBranchForMorph, reflection, fetchSearch, allVideos, isMobileSurface, hero]);
+  }, [interludeMode, pendingBranchForMorph, reflection, fetchSearch, allVideos, isMobileSurface, hero, currentTopic]);
 
   const handleBranchOutward = useCallback(() => {
     const next = generateBranches(allVideos, currentTopic);
@@ -515,9 +517,25 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
         <>
           {/* Slightly darker background during playback so video owns the frame */}
           <div
-            className="fixed inset-0 z-0 bg-black/20 pointer-events-none sm:bg-transparent"
+            className="fixed inset-0 z-0 pointer-events-none overflow-hidden"
             aria-hidden
-          />
+          >
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `url(${
+                  playingVideo.thumbnailUrl ??
+                  `https://img.youtube.com/vi/${playingVideo.youtubeId}/default.jpg`
+                })`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: "blur(26px) saturate(1.18) brightness(0.78)",
+                transform: "scale(1.08)",
+                opacity: 0.72,
+              }}
+            />
+            <div className="absolute inset-0 bg-black/5 sm:bg-transparent" />
+          </div>
           {isMobileSurface ? (
             <div className="relative z-10 flex w-full min-w-0 max-w-[100%] flex-1 flex-col px-[max(1rem,env(safe-area-inset-left))] pb-8 pt-2 pr-[max(1rem,env(safe-area-inset-right))] sm:px-4 sm:pb-12 sm:pt-4">
               {/* Light card so guide panel below player isn’t grey-on-grey on mobile */}

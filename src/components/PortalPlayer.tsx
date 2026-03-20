@@ -31,6 +31,10 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  const backdropThumb =
+    // Use `default.jpg` as fallback; `maxresdefault.jpg` isn't available for all videos.
+    thumbnailUrl ?? `https://img.youtube.com/vi/${youtubeId}/default.jpg`;
+
   // Start at fade-to-black so the hero click is the single intentional gesture.
   const [viewPhase, setViewPhase] = useState<"toBlack" | "loading" | "playing">("toBlack");
   const [isPlaying, setIsPlaying] = useState(false);
@@ -240,9 +244,19 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
     : { color: "var(--theme-text-tone)" };
 
   const playerContent = (
-    <div ref={containerRef} className={rootClassName} style={rootStyle}>
+    <div
+      ref={containerRef}
+      className={rootClassName}
+      style={rootStyle}
+      data-portal-player-root
+      id={`portal-player-${youtubeId}-root`}
+    >
       {viewPhase === "toBlack" && (
-        <div className="absolute inset-0 rounded-2xl bg-black aspect-video w-full" />
+        <div
+          className="absolute inset-0 rounded-2xl bg-black aspect-video w-full"
+          data-portal-player-layer="toBlack"
+          id={`portal-player-${youtubeId}-toBlack`}
+        />
       )}
 
       {(viewPhase === "loading" || viewPhase === "playing") && (
@@ -253,19 +267,23 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
           style={fullViewport ? { flex: "1 1 0", minHeight: 0 } : undefined}
         >
           {/* Blur-zoomed video backdrop to soften hard black bars, especially for letterboxed sources */}
-          {thumbnailUrl && (
-            <div
-              className="absolute inset-0 z-0 rounded-2xl"
-              style={{
-                backgroundImage: `url(${thumbnailUrl})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                filter: "blur(26px) saturate(1.05) brightness(0.55)",
-                transform: "scale(1.08)",
-              }}
-              aria-hidden
-            />
-          )}
+          <div
+            // Blur backdrop sits behind the iframe; the iframe opacity controls how much
+            // of this shows through (so we don't blur the actual video pixels).
+            className="absolute inset-0 z-0 rounded-2xl pointer-events-none"
+            style={{
+              backgroundImage: `url(${backdropThumb})`,
+              backgroundColor: "rgba(0,0,0,0.45)",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              filter: "blur(26px) saturate(1.1) brightness(0.72)",
+              transform: "scale(1.08)",
+              opacity: viewPhase === "playing" ? 0.7 : 0.88,
+            }}
+            aria-hidden
+            data-portal-player-layer="backdrop"
+            id={`portal-player-${youtubeId}-backdrop`}
+          />
           <iframe
             ref={iframeRef}
             src={buildEmbedUrl(youtubeId, {
@@ -276,10 +294,19 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             className="absolute inset-0 z-10 h-full w-full rounded-2xl"
+            data-portal-player-layer="iframe"
+            id={`portal-player-${youtubeId}-iframe`}
             style={{
-              // In fullscreen (`fullViewport`) force opacity to 1 so iOS Safari quirks
-              // around load/resize can't leave us with a blank surface.
-              opacity: viewPhase === "playing" || fullViewport ? 1 : 0,
+              // Keep the iframe slightly transparent during playback so the blurred
+              // thumbnail backdrop can bleed through (matches the prior look).
+              opacity:
+                viewPhase === "playing" ? 1 : 0,
+              // Only reveal blurred backdrop through the likely letterbox regions
+              // (top/bottom). This keeps the actual video pixels crisp.
+              clipPath:
+                viewPhase === "playing" && !isIOS ? "inset(18% 0 18% 0)" : undefined,
+              WebkitClipPath:
+                viewPhase === "playing" && !isIOS ? "inset(18% 0 18% 0)" : undefined,
               transition: `opacity ${FADE_UP_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
             }}
             onLoad={onIframeLoad}
@@ -289,6 +316,8 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
             <div
               className="player-yt-mask absolute inset-0 z-20 rounded-2xl"
               aria-hidden
+              data-portal-player-layer="yt-mask"
+              id={`portal-player-${youtubeId}-yt-mask`}
             />
           )}
           {/* Tap-to-show overlay only for our custom controls (non‑iOS). On iOS we rely on YouTube’s own UI. */}
@@ -297,6 +326,8 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
               type="button"
               aria-label="Show player controls"
               className="absolute inset-0 z-[25] cursor-pointer rounded-2xl bg-transparent"
+              data-portal-player-layer="controls-tap-overlay"
+              id={`portal-player-${youtubeId}-controls-tap`}
               onClick={() => showControls()}
             />
           )}
@@ -304,6 +335,8 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
             <div
               className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/90 player-loading-shimmer"
               aria-hidden
+              data-portal-player-layer="loading-overlay"
+              id={`portal-player-${youtubeId}-loading`}
             />
           )}
         </div>
@@ -313,6 +346,8 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
       {videoEnded && (
         <div
           className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 rounded-2xl px-6 py-8"
+          data-portal-player-layer="ended-overlay"
+          id={`portal-player-${youtubeId}-ended`}
           style={{
             background: "rgba(0,0,0,0.82)",
             color: "var(--theme-text-tone)",
@@ -346,6 +381,8 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
           className={`absolute bottom-0 left-0 right-0 z-10 flex flex-col gap-2 rounded-b-2xl p-3 transition-opacity duration-300 ease-out ${
             controlsVisible ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
+          data-portal-player-layer="controls-chrome"
+          id={`portal-player-${youtubeId}-controls-chrome`}
           style={{
             background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.4) 60%, transparent)",
           }}

@@ -42,14 +42,59 @@ function curatedDescription(theme: string, coreTopic: string): string {
  */
 export function generateBranches(videos: PortalVideo[], coreTopic: string): JourneyBranch[] {
   if (videos.length === 0) return [];
-  const indices = [1, 4, 7].filter((i) => i < videos.length);
-  if (indices.length === 0) {
-    const v = videos[0];
-    const title = titleToShortLabel(v.title);
-    return [{ title, description: curatedDescription(title, coreTopic), video: v }];
+
+  // Pick representative branch cards that best match the user's current thread.
+  // This avoids “random” unrelated videos (e.g. gaming) being chosen just because of fixed indices.
+  const coreKeywords = coreTopic
+    .toLowerCase()
+    .split(/[^a-z0-9]+/g)
+    .map((w) => w.trim())
+    .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
+
+  const negativeKeywords = ["minecraft", "roblox", "fortnite", "twitch", "gaming"];
+
+  const scored = videos.map((v, idx) => {
+    const t = (v.title || "").toLowerCase();
+    let score = 0;
+
+    if (negativeKeywords.some((k) => t.includes(k))) {
+      score -= 1000;
+    }
+
+    for (const k of coreKeywords) {
+      if (k && t.includes(k)) score += 1;
+    }
+
+    // Slightly prefer earlier results to keep a stable “feel” when scores tie.
+    score -= idx * 0.01;
+    return { v, idx, score };
+  });
+
+  const topCount = Math.min(3, scored.length);
+  const sorted = [...scored].sort((a, b) => b.score - a.score);
+  const top = sorted.slice(0, topCount).map((s) => s.v);
+
+  // If the thread keywords are empty (rare), just avoid obvious “off-topic” matches.
+  if (coreKeywords.length === 0) {
+    const filtered = videos.filter((v) => {
+      const t = (v.title || "").toLowerCase();
+      return !negativeKeywords.some((k) => t.includes(k));
+    });
+    const picked = filtered.slice(0, topCount);
+    if (picked.length > 0) {
+      return picked.map((video) => {
+        const title = titleToShortLabel(video.title);
+        return {
+          title,
+          description: curatedDescription(title, coreTopic),
+          video,
+        };
+      });
+    }
   }
-  return indices.map((i) => {
-    const video = videos[i];
+
+  // Build branch cards from the “best match” videos.
+  return top.map((video) => {
     const title = titleToShortLabel(video.title);
     return {
       title,
