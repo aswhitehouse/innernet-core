@@ -61,7 +61,7 @@ export function NewsTrack() {
           </span>
         </div>
         <p className="mt-1 text-xs opacity-60" style={{ color: "var(--theme-text-tone)" }}>
-          Low — information flow is manageable.
+          Low, information flow is manageable.
         </p>
       </div>
       <ul className="mt-6 space-y-4">

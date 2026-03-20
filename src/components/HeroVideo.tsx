@@ -23,7 +23,7 @@ interface HeroVideoProps {
 
 export function HeroVideo({ video, zoneLabel, onPlay }: HeroVideoProps) {
   const thumb = video.thumbnailUrl ?? defaultThumb(video.youtubeId);
-  const duration = video.duration ?? "—";
+  const duration = video.duration ?? "-";
   const isClickable = Boolean(onPlay);
 
   return (

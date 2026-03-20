@@ -88,7 +88,7 @@ export function IdentityGate({ onIdentified }: IdentityGateProps) {
         </h1>
         <p className="mt-2 text-sm text-black/55 dark:text-white/55">
           Enter your token each visit, or register with your first name only. No
-          email — we only store a display name and rough session notes tied to
+          email; we only store a display name and rough session notes tied to
           your token.
         </p>
 
@@ -170,7 +170,7 @@ export function IdentityGate({ onIdentified }: IdentityGateProps) {
         {registeredToken && (
           <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/40">
             <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
-              Save this token — you&apos;ll need it next time.
+              Save this token; you&apos;ll need it next time.
             </p>
             <p className="mt-2 break-all font-mono text-xs text-amber-800 dark:text-amber-200">
               {registeredToken}
@@ -186,7 +186,7 @@ export function IdentityGate({ onIdentified }: IdentityGateProps) {
               }}
               className="mt-3 w-full rounded-lg bg-amber-900/10 py-2 text-sm font-medium text-amber-900 dark:bg-amber-100/10 dark:text-amber-100"
             >
-              I&apos;ve saved it — continue
+              I&apos;ve saved it; continue
             </button>
           </div>
         )}

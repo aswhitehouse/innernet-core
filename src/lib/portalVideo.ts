@@ -21,7 +21,7 @@ export function searchItemToPortalVideo(item: {
     id: item.videoId,
     youtubeId: item.videoId,
     title: item.title,
-    duration: "—",
+    duration: "-",
     thumbnailUrl: item.thumbnailUrl,
     channelTitle: item.channelTitle,
   };

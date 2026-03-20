@@ -19,7 +19,7 @@ export function YouTubeCluster({ videos, onSelect }: YouTubeClusterProps) {
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:gap-5">
       {display.map((video) => {
         const thumb = video.thumbnailUrl ?? defaultThumb(video.youtubeId);
-        const duration = video.duration ?? "—";
+        const duration = video.duration ?? "-";
         return (
           <button
             key={video.id}

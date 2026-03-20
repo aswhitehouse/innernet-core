@@ -69,7 +69,7 @@ export function CentralPane({ activeTrack, onCloseTrack, watchHasBeenOpened = fa
                 className="mt-1 text-sm opacity-60"
                 style={{ color: "var(--theme-text-tone)" }}
               >
-                Your space will open here — no page jumps, no clutter.
+                Your space will open here, no page jumps, no clutter.
               </p>
             </div>
           )}

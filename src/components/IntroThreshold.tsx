@@ -72,7 +72,7 @@ export function IntroThreshold({
         onMouseEnter={() => setHover("explore")}
         onMouseLeave={() => setHover(null)}
         onClick={() => handleSelect("explore")}
-        aria-label="Choose Explore — follow intention, shape the path"
+        aria-label="Choose Explore, follow intention, shape the path"
       >
         <p className="text-sm font-medium uppercase tracking-[0.25em] opacity-90">
           Explore
@@ -93,7 +93,7 @@ export function IntroThreshold({
         onMouseEnter={() => setHover("drift")}
         onMouseLeave={() => setHover(null)}
         onClick={() => handleSelect("drift")}
-        aria-label="Choose Drift — wander, let it unfold"
+        aria-label="Choose Drift, wander, let it unfold"
       >
         <p className="text-sm font-medium uppercase tracking-[0.25em] opacity-90">
           Drift

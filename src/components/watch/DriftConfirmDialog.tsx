@@ -42,7 +42,7 @@ export function DriftConfirmDialog({
           {message} {subMessage}
         </p>
         <p className="mt-1 text-xs opacity-70">
-          &ldquo;{video.title}&rdquo; — Intensity {video.emotionalIntensity}, Drift risk: {video.driftRisk}
+          &ldquo;{video.title}&rdquo;, Intensity {video.emotionalIntensity}, Drift risk: {video.driftRisk}
         </p>
         <div className="mt-5 flex flex-wrap gap-2">
           <button

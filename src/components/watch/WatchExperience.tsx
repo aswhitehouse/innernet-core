@@ -96,7 +96,7 @@ export function WatchExperience() {
           Watch
         </h2>
         <p className="mt-0.5 text-xs opacity-70" style={{ color: "var(--theme-text-tone)" }}>
-          Gen UX — intent-led, transparent, alive.
+          Gen UX, intent-led, transparent, alive.
         </p>
       </div>
 

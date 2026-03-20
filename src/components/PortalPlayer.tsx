@@ -369,7 +369,7 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
               onClick={onExit}
               className="rounded-xl border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-white/15"
             >
-              Zoom out — choose another direction
+              Zoom out, choose another direction
             </button>
           </div>
         </div>
@@ -433,7 +433,7 @@ export function PortalPlayer({ youtubeId, title, thumbnailUrl, onExit }: PortalP
                 showControls();
               }}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 border-white/90 bg-white/95 text-black transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-white/50"
-              aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen — rotate for landscape"}
+              aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen, rotate for landscape"}
               title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
             >
               <span className="text-sm font-bold leading-none" aria-hidden>

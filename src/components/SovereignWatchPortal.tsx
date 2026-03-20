@@ -133,7 +133,7 @@ export function SovereignWatchPortal({ onCollapse }: SovereignWatchPortalProps) 
       setPhase("interlude");
     } catch (err) {
       console.error("[SovereignWatchPortal] search failed", err);
-      setSearchError("Search failed — check connection and YouTube API key.");
+      setSearchError("Search failed, check connection and YouTube API key.");
       setPhase("idle");
     }
   }, [intentText, fetchSearch]);
